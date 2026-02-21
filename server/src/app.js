@@ -10,6 +10,7 @@ import consultationsRoutes from "./routes/consultations.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import supportTicketsRoutes from "./routes/supportTickets.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import messagesRoutes from "./routes/messages.routes.js";
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use("/api/consultations", consultationsRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/support-tickets", supportTicketsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/messages", messagesRoutes);
 
 app.use((err, _req, res, _next) => {
   const status = err?.status || 500;

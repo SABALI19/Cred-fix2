@@ -54,6 +54,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import AgentClientInbox from "@/components/chat/AgentClientInbox";
 
 const AgentDashboard = () => {
   const { user } = useAuth();
@@ -521,6 +522,8 @@ const AgentDashboard = () => {
               </div>
             </CardContent>
           </Card>
+
+          {user?.role === "agent" ? <AgentClientInbox className="mb-8" /> : null}
 
           {/* Recent Activities */}
           <Card>

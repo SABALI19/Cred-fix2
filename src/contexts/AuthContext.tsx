@@ -7,12 +7,22 @@ import React, {
 } from "react";
 import { authService, type AuthUser } from "@/services/authService";
 import { tokenStorage } from "@/services/apiClient";
+import { socketClient } from "@/services/socketClient";
 
 interface User {
   id: string;
   email: string;
   name: string;
   role: "user" | "agent" | "admin";
+  assignedAgentId?: string | null;
+  assignedAgent?: {
+    _id: string;
+    name: string;
+    email: string;
+    profilePhoto?: string;
+    phone?: string;
+    bio?: string;
+  } | null;
   profilePhoto?: string;
   bio?: string;
   phone?: string;
@@ -30,6 +40,7 @@ interface AuthContextType {
   openIRSVerification: () => void;
   closeIRSVerification: () => void;
   login: (email: string, password: string) => Promise<User>;
+  selectAgent: (agentId: string | null) => Promise<void>;
   signUp: (
     name: string,
     email: string,
@@ -74,6 +85,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     email: u.email,
     name: u.name,
     role: u.role,
+    assignedAgentId: u.assignedAgentId ?? null,
+    assignedAgent: u.assignedAgent ?? null,
     profilePhoto: u.profilePhoto,
     bio: u.bio,
     phone: u.phone,
@@ -98,6 +111,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
     bootstrap();
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      socketClient.connect();
+      return;
+    }
+
+    socketClient.disconnect();
+  }, [user?.id]);
 
   const openLogin = () => {
     setIsSignUpOpen(false);
@@ -161,6 +183,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 1000);
   };
 
+  const selectAgent = async (agentId: string | null) => {
+    const updated = await authService.selectAgent(agentId);
+    setUser(mapUser(updated));
+  };
+
   const logout = () => {
     authService.logout().catch(() => null);
     setUser(null);
@@ -185,6 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     openIRSVerification,
     closeIRSVerification,
     login,
+    selectAgent,
     signUp,
     logout,
     updateProfile,

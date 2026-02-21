@@ -6,6 +6,15 @@ export interface AuthUser {
   email: string;
   name: string;
   role: "user" | "agent" | "admin";
+  assignedAgentId?: string | null;
+  assignedAgent?: {
+    _id: string;
+    name: string;
+    email: string;
+    profilePhoto?: string;
+    phone?: string;
+    bio?: string;
+  };
   profilePhoto?: string;
   bio?: string;
   phone?: string;
@@ -77,6 +86,29 @@ export const authService = {
     const data = await apiRequest<{ user: AuthUser }>("/auth/me", {
       method: "GET",
       auth: true,
+    });
+    return data.user;
+  },
+
+  async getAvailableAgents() {
+    return apiRequest<
+      Array<{
+        _id: string;
+        name: string;
+        email: string;
+        profilePhoto?: string;
+        phone?: string;
+        bio?: string;
+        clientCount: number;
+      }>
+    >("/auth/agents", { method: "GET", auth: true });
+  },
+
+  async selectAgent(agentId: string | null) {
+    const data = await apiRequest<{ user: AuthUser }>("/auth/me/agent", {
+      method: "PATCH",
+      auth: true,
+      body: JSON.stringify({ agentId }),
     });
     return data.user;
   },

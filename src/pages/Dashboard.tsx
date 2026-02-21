@@ -52,6 +52,7 @@ import {
 import CreditScoreGauge from "@/components/charts/CreditScoreGauge";
 import DisputesGauge from "@/components/charts/DisputesGauge";
 import AccountStatusGauge from "@/components/charts/AccountStatusGauge";
+import UserAgentChat from "@/components/chat/UserAgentChat";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -271,6 +272,8 @@ const Dashboard = () => {
               </p>
             </CardContent>
           </Card>
+
+          {user?.role === "user" ? <UserAgentChat className="mb-8" /> : null}
 
           {/* IRS Security Alert */}
           <Card className="mb-8 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-red-200">

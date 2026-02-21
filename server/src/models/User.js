@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "agent", "admin"],
       default: "user",
     },
+    assignedAgentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
     profilePhoto: { type: String, trim: true, default: "" },
     bio: { type: String, trim: true, default: "" },
     phone: { type: String, trim: true, default: "" },
