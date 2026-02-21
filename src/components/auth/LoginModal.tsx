@@ -31,7 +31,11 @@ const LoginModal = () => {
     try {
       await login(email, password);
     } catch (err) {
-      setError("Invalid email or password. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Invalid email or password. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +160,7 @@ const LoginModal = () => {
           <p>Demo credentials:</p>
           <p>User: user@demo.com / password</p>
           <p>Agent: agent@demo.com / password</p>
-          <p>Admin: admin@demo.com / password</p>
+          <p>Admin access emails: admin@demo.com, owner@creditfixpro.com, ops@creditfixpro.com</p>
         </div>
       </DialogContent>
 

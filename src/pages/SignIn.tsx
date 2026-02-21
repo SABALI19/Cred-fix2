@@ -25,8 +25,8 @@ const SignIn: React.FC = () => {
     try {
       await login(email, password)
       navigate('/live-dashboard')
-    } catch (_err) {
-      setError("Invalid email or password")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid email or password")
     } finally {
       setIsLoading(false)
     }

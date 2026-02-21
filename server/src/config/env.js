@@ -23,4 +23,8 @@ export const env = {
   mongodbUri:
     process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/creditfix",
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  adminAccessEmails: (process.env.ADMIN_ACCESS_EMAILS || "")
+    .split(",")
+    .map((email) => email.toLowerCase().trim())
+    .filter(Boolean),
 };

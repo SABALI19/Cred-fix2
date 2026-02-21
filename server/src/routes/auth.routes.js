@@ -3,12 +3,16 @@ import bcrypt from "bcryptjs";
 import { User } from "../models/User.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { signAuthToken } from "../utils/jwt.js";
+import { resolveEffectiveRole, toAuthUser } from "../utils/adminAccess.js";
 
 const router = Router();
 
 const toAuthPayload = (user) => ({
-  user: user.toJSON(),
-  token: signAuthToken({ sub: user._id.toString(), role: user.role }),
+  user: toAuthUser(user),
+  token: signAuthToken({
+    sub: user._id.toString(),
+    role: resolveEffectiveRole(user),
+  }),
 });
 
 router.post("/register", async (req, res, next) => {
@@ -80,7 +84,7 @@ router.post("/login", async (req, res, next) => {
 });
 
 router.get("/me", requireAuth, async (req, res) => {
-  res.json({ user: req.user.toJSON() });
+  res.json({ user: toAuthUser(req.user) });
 });
 
 router.patch("/me", requireAuth, async (req, res, next) => {
@@ -92,7 +96,7 @@ router.patch("/me", requireAuth, async (req, res, next) => {
       }
     }
     await req.user.save();
-    res.json({ user: req.user.toJSON() });
+    res.json({ user: toAuthUser(req.user) });
   } catch (error) {
     next(error);
   }

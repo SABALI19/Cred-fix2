@@ -1,5 +1,6 @@
 import { User } from "../models/User.js";
 import { verifyAuthToken } from "../utils/jwt.js";
+import { resolveEffectiveRole } from "../utils/adminAccess.js";
 
 export const optionalAuth = async (req, _res, next) => {
   try {
@@ -18,7 +19,7 @@ export const optionalAuth = async (req, _res, next) => {
       return next();
     }
 
-    req.auth = { userId: user._id.toString(), role: user.role };
+    req.auth = { userId: user._id.toString(), role: resolveEffectiveRole(user) };
     req.user = user;
     return next();
   } catch (_error) {
