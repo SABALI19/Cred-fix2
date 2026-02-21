@@ -23,8 +23,14 @@ const SignIn: React.FC = () => {
     setError("")
 
     try {
-      await login(email, password)
-      navigate('/live-dashboard')
+      const loggedInUser = await login(email, password)
+      const dashboardPath =
+        loggedInUser.role === "admin"
+          ? "/admin-dashboard"
+          : loggedInUser.role === "agent"
+            ? "/agent-dashboard"
+            : "/dashboard"
+      navigate(dashboardPath)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid email or password")
     } finally {

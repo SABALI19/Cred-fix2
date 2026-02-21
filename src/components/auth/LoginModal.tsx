@@ -29,7 +29,14 @@ const LoginModal = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
+      const dashboardPath =
+        loggedInUser.role === "admin"
+          ? "/admin-dashboard"
+          : loggedInUser.role === "agent"
+            ? "/agent-dashboard"
+            : "/dashboard";
+      window.location.href = dashboardPath;
     } catch (err) {
       setError(
         err instanceof Error

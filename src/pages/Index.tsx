@@ -42,6 +42,13 @@ import DetailedPricingModal from "@/components/pricing/DetailedPricingModal";
 
 const Index = () => {
   const { user } = useAuth();
+  const dashboardPath = user
+    ? user.role === "admin"
+      ? "/admin-dashboard"
+      : user.role === "agent"
+        ? "/agent-dashboard"
+        : "/dashboard"
+    : "/dashboard";
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [selectedServiceType, setSelectedServiceType] = useState<
     "credit" | "tax" | null
@@ -261,7 +268,7 @@ const Index = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Link to="/dashboard" className="w-full sm:w-auto">
+                    <Link to={dashboardPath} className="w-full sm:w-auto">
                       <Button
                         size="lg"
                         className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto"
@@ -625,7 +632,7 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {user ? (
-                <Link to="/dashboard">
+                <Link to={dashboardPath}>
                   <Button
                     size="lg"
                     variant="secondary"

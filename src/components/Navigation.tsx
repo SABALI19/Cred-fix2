@@ -31,6 +31,13 @@ const Navigation = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, openLogin, openSignUp, logout } = useAuth();
+  const dashboardPath = user
+    ? user.role === "admin"
+      ? "/admin-dashboard"
+      : user.role === "agent"
+        ? "/agent-dashboard"
+        : "/dashboard"
+    : "/dashboard";
 
   const getNavItems = () => {
     const baseItems = [{ href: "/", label: "Home", icon: Home }];
@@ -180,7 +187,7 @@ const Navigation = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="flex items-center">
+                    <Link to={dashboardPath} className="flex items-center">
                       <User className="mr-2 h-4 w-4" />
                       Dashboard
                     </Link>
@@ -326,4 +333,3 @@ const Navigation = () => {
 };
 
 export default Navigation;
-

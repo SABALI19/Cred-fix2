@@ -29,7 +29,7 @@ interface AuthContextType {
   closeSignUp: () => void;
   openIRSVerification: () => void;
   closeIRSVerification: () => void;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   signUp: (
     name: string,
     email: string,
@@ -127,13 +127,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     const loggedInUser = await authService.login(email, password);
-    setUser(mapUser(loggedInUser));
+    const mappedUser = mapUser(loggedInUser);
+    setUser(mappedUser);
     closeLogin();
 
     // Show IRS verification popup after successful login
     setTimeout(() => {
       setIsIRSVerificationOpen(true);
     }, 1000);
+
+    return mappedUser;
   };
 
   const signUp = async (
