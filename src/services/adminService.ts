@@ -46,8 +46,49 @@ export interface AdminDashboardData {
   systemAlerts: SystemAlert[];
 }
 
+export interface AgentUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: "agent";
+  phone?: string;
+  address?: {
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAgentPayload {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  address?: {
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
+}
+
 export const adminService = {
   getDashboard() {
     return apiRequest<AdminDashboardData>("/admin/dashboard", { auth: true });
+  },
+
+  getAgents() {
+    return apiRequest<AgentUser[]>("/admin/agents", { auth: true });
+  },
+
+  createAgent(payload: CreateAgentPayload) {
+    return apiRequest<{ agent: AgentUser }>("/admin/agents", {
+      method: "POST",
+      auth: true,
+      body: JSON.stringify(payload),
+    });
   },
 };

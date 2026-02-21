@@ -1,4 +1,5 @@
 import { Router } from "express";
+import bcrypt from "bcryptjs";
 import { ConsultationRequest } from "../models/ConsultationRequest.js";
 import { Dispute } from "../models/Dispute.js";
 import { SupportTicket } from "../models/SupportTicket.js";
@@ -65,6 +66,67 @@ router.use((req, res, next) => {
     });
   }
   return next();
+});
+
+router.get("/agents", async (_req, res, next) => {
+  try {
+    const agents = await User.find({ role: "agent" })
+      .sort({ createdAt: -1 })
+      .select("name email role phone createdAt updatedAt")
+      .lean();
+
+    res.json(agents);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/agents", async (req, res, next) => {
+  try {
+    const { name, email, password, phone, address } = req.body || {};
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        error: "ValidationError",
+        message: "name, email and password are required",
+      });
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) {
+      return res.status(409).json({
+        error: "Conflict",
+        message: "Email already in use",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const created = await User.create({
+      name,
+      email: normalizedEmail,
+      passwordHash,
+      role: "agent",
+      phone: phone || "",
+      address: address || undefined,
+    });
+
+    return res.status(201).json({
+      agent: {
+        _id: created._id,
+        name: created.name,
+        email: created.email,
+        role: created.role,
+        phone: created.phone,
+        address: created.address,
+        createdAt: created.createdAt,
+        updatedAt: created.updatedAt,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
 });
 
 router.get("/dashboard", async (_req, res, next) => {

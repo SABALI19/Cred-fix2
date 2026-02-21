@@ -43,6 +43,27 @@ export const authService = {
     return data.user;
   },
 
+  async registerAgent(payload: {
+    name: string;
+    email: string;
+    password: string;
+    accessKey: string;
+    phone?: string;
+    address?: {
+      streetAddress?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+    };
+  }) {
+    const data = await apiRequest<AuthResponse>("/auth/register-agent", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    tokenStorage.set(data.token);
+    return data.user;
+  },
+
   async login(email: string, password: string) {
     const data = await apiRequest<AuthResponse>("/auth/login", {
       method: "POST",

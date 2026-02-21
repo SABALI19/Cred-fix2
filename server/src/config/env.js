@@ -22,9 +22,13 @@ export const env = {
   port: Number(process.env.PORT || 5000),
   mongodbUri:
     process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/creditfix",
-  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  corsOrigins: (process.env.CORS_ORIGIN || "http://localhost:8080")
+    .split(/\s*(?:,|\|\|)\s*/)
+    .map((origin) => origin.trim().replace(/^['"]|['"]$/g, ""))
+    .filter(Boolean),
   adminAccessEmails: (process.env.ADMIN_ACCESS_EMAILS || "")
     .split(",")
     .map((email) => email.toLowerCase().trim())
     .filter(Boolean),
+  agentRegistrationKey: (process.env.AGENT_REGISTRATION_KEY || "").trim(),
 };

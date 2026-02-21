@@ -4,6 +4,7 @@ import { User } from "../models/User.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { signAuthToken } from "../utils/jwt.js";
 import { resolveEffectiveRole, toAuthUser } from "../utils/adminAccess.js";
+import { env } from "../config/env.js";
 
 const router = Router();
 
@@ -45,6 +46,57 @@ router.post("/register", async (req, res, next) => {
     });
 
     return res.status(201).json(toAuthPayload(user));
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post("/register-agent", async (req, res, next) => {
+  try {
+    const { name, email, password, accessKey, phone, address } = req.body || {};
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        error: "ValidationError",
+        message: "name, email and password are required",
+      });
+    }
+
+    if (!env.agentRegistrationKey) {
+      return res.status(503).json({
+        error: "ConfigurationError",
+        message: "Agent registration is not configured",
+      });
+    }
+
+    if (!accessKey || accessKey !== env.agentRegistrationKey) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "Invalid agent registration key",
+      });
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) {
+      return res.status(409).json({
+        error: "Conflict",
+        message: "Email already in use",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const agent = await User.create({
+      name,
+      email: normalizedEmail,
+      passwordHash,
+      role: "agent",
+      phone: phone || "",
+      address: address || undefined,
+    });
+
+    return res.status(201).json(toAuthPayload(agent));
   } catch (error) {
     return next(error);
   }
