@@ -236,8 +236,8 @@ const AdminDashboard = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
 
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
+          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold mb-2">
                 Admin Dashboard - {user?.name || "Administrator"}
@@ -246,8 +246,14 @@ const AdminDashboard = () => {
                 Live platform metrics and operations monitoring
               </p>
             </div>
-            <div className="flex gap-3 mt-4 md:mt-0">
-              <Button variant="outline" size="sm" onClick={loadDashboard} disabled={isLoading}>
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap md:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadDashboard}
+                disabled={isLoading}
+                className="w-full sm:w-auto"
+              >
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
@@ -255,16 +261,17 @@ const AdminDashboard = () => {
                 variant={isChatVisible ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsChatVisible((prev) => !prev)}
+                className="w-full sm:w-auto"
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 {isChatVisible ? "Hide Chat" : "Open Chat"}
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
                 Export Report
               </Button>
-              <Link to="/admin-management">
-                <Button variant="outline" size="sm">
+              <Link to="/admin-management" className="w-full sm:w-auto">
+                <Button variant="outline" size="sm" className="w-full">
                   <Settings className="w-4 h-4 mr-2" />
                   Management Panel
                 </Button>
@@ -491,8 +498,8 @@ const AdminDashboard = () => {
               <CardTitle>Recent Platform Users</CardTitle>
               <CardDescription>Latest registrations and dispute activity snapshot</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
+            <CardContent className="px-0 sm:px-6">
+              <div className="overflow-x-auto px-4 sm:px-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -555,7 +562,7 @@ const AdminDashboard = () => {
                 Assigned users, their active plans, and their latest saved appointment.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-0 sm:px-6">
               {(dashboard?.agentPortfolios || []).map((portfolio) => (
                 <div key={portfolio.id} className="rounded-xl border border-border/70">
                   <div className="flex flex-col gap-2 border-b px-4 py-4 md:flex-row md:items-center md:justify-between">
@@ -569,7 +576,7 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto px-4 py-4 sm:px-0 sm:py-0">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -656,7 +663,8 @@ const AdminDashboard = () => {
                 Scheduled consultations showing which user booked with which agent.
               </CardDescription>
             </CardHeader>
-            <CardContent className="overflow-x-auto">
+            <CardContent className="px-0 sm:px-6">
+              <div className="overflow-x-auto px-4 sm:px-0">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -713,6 +721,7 @@ const AdminDashboard = () => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
 
@@ -731,7 +740,7 @@ const AdminDashboard = () => {
                   >
                     <div className="flex-shrink-0 mt-1">{getAlertIcon(alert.type)}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex-1">
                           <p className="text-sm font-medium leading-tight">{alert.message}</p>
                           <p className="text-xs text-muted-foreground mt-1">{alert.timestamp}</p>

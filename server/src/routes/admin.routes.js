@@ -12,6 +12,7 @@ import { User } from "../models/User.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { requireAdmin } from "../middleware/admin.middleware.js";
 import { toAuthUser } from "../utils/adminAccess.js";
+import { ensureAgentAssignmentRequest } from "../utils/agentAssignment.js";
 
 const router = Router();
 
@@ -683,6 +684,8 @@ router.patch("/users/:userId", async (req, res, next) => {
       });
     }
 
+    const previousAgentId = user.assignedAgentId?.toString() || null;
+
     const errors = await applyManagedUserPatch({
       actorId: req.user._id,
       targetUser: user,
@@ -697,6 +700,17 @@ router.patch("/users/:userId", async (req, res, next) => {
     }
 
     await user.save();
+
+    const nextAgentId = user.assignedAgentId?.toString() || null;
+    if (user.role === "user" && nextAgentId && nextAgentId !== previousAgentId) {
+      await ensureAgentAssignmentRequest({
+        user,
+        agentId: user.assignedAgentId,
+        serviceType: user.selectedService,
+        source: "admin_assigned",
+      });
+    }
+
     const refreshedUser = await getManagedUser(user._id);
     const snapshot = await getUserDataSnapshot(user._id);
 

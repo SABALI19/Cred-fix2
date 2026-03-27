@@ -1,8 +1,10 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import { ConsultationRequest } from "../models/ConsultationRequest.js";
 import { User } from "../models/User.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { requireAdmin } from "../middleware/admin.middleware.js";
+import { ensureAgentAssignmentRequest } from "../utils/agentAssignment.js";
 
 const router = Router();
 
@@ -52,14 +54,54 @@ router.post("/", async (req, res, next) => {
 
     const normalizedEmail = String(email).toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
-    if (user && plan?.name) {
-      user.activePlan = {
-        name: String(plan.name),
-        price: plan.price ?? null,
-        serviceType: serviceType || "",
-        startedAt: new Date(),
-      };
+    if (user?.role === "user") {
+      if (plan?.name) {
+        user.activePlan = {
+          name: String(plan.name),
+          price: plan.price ?? null,
+          serviceType: serviceType || "",
+          startedAt: new Date(),
+        };
+      }
+
+      const requestedAgentId = String(agent?.id || "").trim();
+      const hasAssignedAgent = Boolean(user.assignedAgentId);
+      const assignedAgentId = user.assignedAgentId?.toString() || null;
+
+      if (serviceType && !user.selectedService) {
+        user.selectedService = serviceType;
+      }
+
+      if (requestedAgentId && !hasAssignedAgent && mongoose.isValidObjectId(requestedAgentId)) {
+        const bookedAgent = await User.findOne({
+          _id: requestedAgentId,
+          role: "agent",
+          status: "active",
+        })
+          .select("_id")
+          .lean();
+
+        if (bookedAgent) {
+          user.assignedAgentId = bookedAgent._id;
+        }
+      }
+
       await user.save();
+
+      const nextAgentId = user.assignedAgentId?.toString() || null;
+      const shouldCreateRequest =
+        nextAgentId &&
+        (nextAgentId === String(agent?.id || "").trim() || assignedAgentId !== nextAgentId);
+
+      if (shouldCreateRequest) {
+        await ensureAgentAssignmentRequest({
+          user,
+          agentId: user.assignedAgentId,
+          serviceType: serviceType || user.selectedService,
+          planName: plan?.name || "",
+          source: "consultation_booked",
+        });
+      }
     }
 
     return res.status(201).json(created);

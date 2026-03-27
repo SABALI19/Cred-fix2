@@ -5,8 +5,7 @@ import { requireAuth } from "../middleware/auth.middleware.js";
 import { signAuthToken } from "../utils/jwt.js";
 import { resolveEffectiveRole, toAuthUser } from "../utils/adminAccess.js";
 import { env } from "../config/env.js";
-import { AgentMessage } from "../models/AgentMessage.js";
-import { emitNewMessage } from "../realtime/socket.js";
+import { ensureAgentAssignmentRequest } from "../utils/agentAssignment.js";
 import mongoose from "mongoose";
 
 const router = Router();
@@ -24,19 +23,6 @@ const VALID_SERVICE_TYPES = new Set([
   "tax_services",
   "comprehensive",
 ]);
-
-const SERVICE_TYPE_LABELS = {
-  credit_repair: "Credit Repair",
-  tax_services: "Tax Services",
-  comprehensive: "Comprehensive Plan",
-};
-
-const serializeMessage = (message) => ({
-  ...message,
-  _id: message._id.toString(),
-  senderId: message.senderId.toString(),
-  recipientId: message.recipientId.toString(),
-});
 
 const getAgentsWithClientCounts = async () => {
   const [agents, assignedCounts] = await Promise.all([
@@ -59,23 +45,6 @@ const getAgentsWithClientCounts = async () => {
     ...agent,
     clientCount: countsByAgent[agent._id.toString()] || 0,
   }));
-};
-
-const createAgentSelectionRequest = async ({
-  userId,
-  userName,
-  agentId,
-  serviceType,
-}) => {
-  const serviceLabel =
-    SERVICE_TYPE_LABELS[serviceType] || "selected CreditFix Pro service";
-  const createdMessage = await AgentMessage.create({
-    senderId: userId,
-    recipientId: agentId,
-    content: `Hi, I'm ${userName}. I registered for ${serviceLabel} and selected you as my CreditFix Pro agent. I'd like to get started.`,
-  });
-
-  emitNewMessage(serializeMessage(createdMessage.toObject()));
 };
 
 router.post("/register", async (req, res, next) => {
@@ -311,11 +280,11 @@ router.patch("/me/agent", requireAuth, async (req, res, next) => {
     await req.user.save();
 
     if (isUserRequest && previousAgentId !== selectedAgent._id.toString()) {
-      await createAgentSelectionRequest({
-        userId: req.user._id,
-        userName: req.user.name,
+      await ensureAgentAssignmentRequest({
+        user: req.user,
         agentId: selectedAgent._id,
         serviceType: req.user.selectedService,
+        source: "user_selected",
       });
     }
 
