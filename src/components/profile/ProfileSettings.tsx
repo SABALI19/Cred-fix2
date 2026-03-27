@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,56 +14,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Camera,
   Upload,
   User,
   Mail,
-  Phone,
   Save,
   Trash2,
-  Eye,
-  EyeOff,
   Shield,
   Edit,
   Users,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { authService } from "@/services/authService";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import {
-  AnimatedContainer,
-  HoverCard,
-} from "@/components/animations/AnimatedComponents";
+import { AnimatedContainer } from "@/components/animations/AnimatedComponents";
 
 const ProfileSettings = () => {
-  const { user, updateProfile, selectAgent } = useAuth();
+  const { user, updateProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [agents, setAgents] = useState<
-    Array<{
-      _id: string;
-      name: string;
-      email: string;
-      profilePhoto?: string;
-      phone?: string;
-      bio?: string;
-      clientCount: number;
-    }>
-  >([]);
-  const [isAgentsLoading, setIsAgentsLoading] = useState(false);
-  const [isSavingAgent, setIsSavingAgent] = useState(false);
-  const [selectedAgentId, setSelectedAgentId] = useState(
-    user?.assignedAgentId || "unassigned",
-  );
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -143,55 +113,6 @@ const ProfileSettings = () => {
   };
 
   const currentPhoto = previewImage || formData.profilePhoto;
-
-  useEffect(() => {
-    setSelectedAgentId(user?.assignedAgentId || "unassigned");
-  }, [user?.assignedAgentId]);
-
-  useEffect(() => {
-    if (!user || user.role !== "user") return;
-
-    const loadAgents = async () => {
-      setIsAgentsLoading(true);
-      try {
-        const rows = await authService.getAvailableAgents();
-        setAgents(rows);
-      } catch (_error) {
-        toast({
-          title: "Could not load agents",
-          description: "Please try again in a moment.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsAgentsLoading(false);
-      }
-    };
-
-    loadAgents();
-  }, [user]);
-
-  const handleSaveAgentSelection = async () => {
-    if (!user || user.role !== "user") return;
-    setIsSavingAgent(true);
-    try {
-      await selectAgent(selectedAgentId === "unassigned" ? null : selectedAgentId);
-      toast({
-        title: "Agent updated",
-        description:
-          selectedAgentId === "unassigned"
-            ? "You are currently not assigned to an agent."
-            : "Your selected agent has been saved.",
-      });
-    } catch (_error) {
-      toast({
-        title: "Could not save agent",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSavingAgent(false);
-    }
-  };
 
   return (
     <AnimatedContainer className="max-w-4xl mx-auto space-y-6">
@@ -412,34 +333,14 @@ const ProfileSettings = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Users className="w-5 h-5" />
-              <span>Choose Your Agent</span>
+              <span>Assigned Agent</span>
             </CardTitle>
             <CardDescription>
-              Select the specialist you want to work with on your credit journey.
+              Agent assignment is set during registration after service
+              selection.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="assigned-agent">Available Agents</Label>
-              <Select
-                value={selectedAgentId}
-                onValueChange={setSelectedAgentId}
-                disabled={isAgentsLoading || isSavingAgent}
-              >
-                <SelectTrigger id="assigned-agent">
-                  <SelectValue placeholder="Select an agent" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">No preference</SelectItem>
-                  {agents.map((agent) => (
-                    <SelectItem key={agent._id} value={agent._id}>
-                      {agent.name} ({agent.clientCount} clients)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {user.assignedAgent ? (
               <div className="rounded-lg border border-border/60 p-3 bg-muted/30 text-sm">
                 <p className="font-medium">{user.assignedAgent.name}</p>
@@ -448,13 +349,11 @@ const ProfileSettings = () => {
                   <p className="text-muted-foreground">{user.assignedAgent.phone}</p>
                 ) : null}
               </div>
-            ) : null}
-
-            <div className="flex justify-end">
-              <Button onClick={handleSaveAgentSelection} disabled={isSavingAgent || isAgentsLoading}>
-                {isSavingAgent ? "Saving..." : "Save Agent Selection"}
-              </Button>
-            </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No assigned agent found on your profile. Please contact support.
+              </p>
+            )}
           </CardContent>
         </Card>
       ) : null}

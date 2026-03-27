@@ -17,7 +17,7 @@ import {
   type PresenceState,
   type TypingEvent,
 } from "@/services/socketClient";
-import { Loader2, MessageSquare, RefreshCw, Users } from "lucide-react";
+import { Loader2, MessageSquare, RefreshCw, SendHorizontal, Users } from "lucide-react";
 
 interface AgentClientInboxProps {
   className?: string;
@@ -31,8 +31,19 @@ const formatTimestamp = (value: string) =>
     minute: "2-digit",
   });
 
+const getInitials = (value?: string) => {
+  if (!value) return "U";
+  return value
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+};
+
 const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
   const { user } = useAuth();
+  const canAccessInbox = user?.role === "agent" || user?.role === "admin";
   const [conversations, setConversations] = useState<AgentConversationItem[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
@@ -88,9 +99,12 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
   };
 
   useEffect(() => {
-    if (user?.role !== "agent") return;
+    if (!canAccessInbox) {
+      setIsLoading(false);
+      return;
+    }
     loadConversations();
-  }, [user?.role]);
+  }, [canAccessInbox]);
 
   useEffect(() => {
     if (!selectedUserId) {
@@ -106,7 +120,7 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
   }, [conversations]);
 
   useEffect(() => {
-    if (user?.role !== "agent") return;
+    if (!canAccessInbox) return;
 
     return socketClient.onNewMessage(({ message }: NewMessageEvent) => {
       const currentUserId = user.id;
@@ -142,10 +156,10 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
         );
       }
     });
-  }, [user?.role, user?.id, selectedUserId]);
+  }, [canAccessInbox, user?.id, selectedUserId]);
 
   useEffect(() => {
-    if (user?.role !== "agent") return;
+    if (!canAccessInbox) return;
 
     const applyPresenceState = (state: PresenceState) => {
       setPresenceByUserId((prev) => ({ ...prev, [state.userId]: state.online }));
@@ -164,15 +178,15 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
       offSnapshot();
       offUpdate();
     };
-  }, [user?.role]);
+  }, [canAccessInbox]);
 
   useEffect(() => {
-    if (user?.role !== "agent") return;
+    if (!canAccessInbox) return;
 
     return socketClient.onTyping(({ fromUserId, isTyping }: TypingEvent) => {
       setTypingByUserId((prev) => ({ ...prev, [fromUserId]: isTyping }));
     });
-  }, [user?.role]);
+  }, [canAccessInbox]);
 
   const stopTyping = (targetId?: string | null) => {
     if (typingTimeoutRef.current) {
@@ -254,7 +268,7 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
   };
 
   return (
-    <Card className={className}>
+    <Card className={cn("border-primary/20 bg-background", className)}>
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div>
           <CardTitle className="flex items-center gap-2">
@@ -269,9 +283,9 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
         </Button>
       </CardHeader>
       <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="rounded-md border">
-          <div className="p-3 border-b text-sm font-medium">Assigned Users</div>
-          <div className="max-h-80 overflow-y-auto">
+        <div className="rounded-2xl border border-border/70 bg-card">
+          <div className="px-4 py-3 border-b text-sm font-semibold">Assigned Users</div>
+          <div className="max-h-[480px] overflow-y-auto">
             {isLoading ? (
               <div className="p-4 text-sm text-muted-foreground flex items-center">
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -288,8 +302,8 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
                   type="button"
                   onClick={() => setSelectedUserId(conversation.user._id)}
                   className={cn(
-                    "w-full text-left p-3 border-b last:border-b-0 hover:bg-muted/30",
-                    selectedUserId === conversation.user._id && "bg-muted/40",
+                    "w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors",
+                    selectedUserId === conversation.user._id && "bg-primary/10",
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -318,26 +332,29 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 rounded-md border p-3 space-y-3">
-          <div className="border-b pb-2">
-            <p className="text-sm font-medium">
-              {selectedConversation ? selectedConversation.user.name : "Select a user"}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {selectedConversation?.user.email || "Choose a conversation to start messaging."}
-            </p>
+        <div className="lg:col-span-2 rounded-3xl border border-primary/20 overflow-hidden bg-[#eaf0ff] dark:bg-slate-900">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-primary/20 bg-[#dfe6fb] dark:bg-slate-800/80">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center">
+                {getInitials(selectedConversation?.user.name)}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate">
+                  {selectedConversation ? selectedConversation.user.name : "Select a user"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {selectedConversation?.user.email || "Choose a conversation to start messaging."}
+                </p>
+              </div>
+            </div>
             {selectedUserId ? (
-              <p className="text-xs text-muted-foreground mt-1">
-                {typingByUserId[selectedUserId]
-                  ? "User is typing..."
-                  : presenceByUserId[selectedUserId]
-                    ? "Online"
-                    : "Offline"}
-              </p>
+              <Badge variant={presenceByUserId[selectedUserId] ? "default" : "secondary"}>
+                {presenceByUserId[selectedUserId] ? "Online" : "Offline"}
+              </Badge>
             ) : null}
           </div>
 
-          <div className="h-64 overflow-y-auto space-y-2">
+          <div className="h-[360px] md:h-[420px] overflow-y-auto px-3 py-4 space-y-3">
             {!selectedUserId ? (
               <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
                 <MessageSquare className="w-4 h-4 mr-2" />
@@ -362,40 +379,69 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
                   >
                     <div
                       className={cn(
-                        "max-w-[80%] rounded-lg px-3 py-2 text-sm",
+                        "max-w-[84%] rounded-2xl px-3 py-2.5 text-sm shadow-sm",
                         isMine
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted/40 border",
+                          ? "bg-primary text-primary-foreground rounded-tr-md"
+                          : "bg-background/95 border border-border/60 rounded-tl-md",
                       )}
                     >
-                      <p>{message.content}</p>
-                      <p
-                        className={cn(
-                          "mt-1 text-[11px]",
-                          isMine ? "text-primary-foreground/80" : "text-muted-foreground",
-                        )}
-                      >
-                        {formatTimestamp(message.createdAt)}
-                      </p>
+                      <div className="flex items-end gap-2">
+                        <p className="break-words leading-relaxed">{message.content}</p>
+                        <p
+                          className={cn(
+                            "text-[10px] shrink-0",
+                            isMine ? "text-primary-foreground/80" : "text-muted-foreground",
+                          )}
+                        >
+                          {formatTimestamp(message.createdAt)}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
               })
             )}
+
+            {selectedUserId && typingByUserId[selectedUserId] ? (
+              <div className="flex items-center gap-2">
+                <div className="rounded-2xl bg-background border border-border/70 px-3 py-2 inline-flex items-center gap-1">
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  />
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "120ms" }}
+                  />
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "240ms" }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">User is typing...</p>
+              </div>
+            ) : null}
           </div>
 
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <Textarea
-            rows={3}
-            value={draft}
-            onChange={(e) => handleDraftChange(e.target.value)}
-            placeholder="Type a reply..."
-            disabled={!selectedUserId || isSending}
-          />
-          <div className="flex justify-end">
-            <Button onClick={handleSend} disabled={!selectedUserId || !draft.trim() || isSending}>
-              {isSending ? "Sending..." : "Send Message"}
-            </Button>
+          <div className="border-t border-primary/20 bg-[#dfe6fb] dark:bg-slate-800/80 px-3 py-3 space-y-2">
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            <div className="flex items-end gap-2">
+              <Textarea
+                rows={2}
+                value={draft}
+                onChange={(e) => handleDraftChange(e.target.value)}
+                placeholder="Type a reply..."
+                disabled={!selectedUserId || isSending}
+                className="min-h-[44px] resize-none bg-background/95"
+              />
+              <Button
+                onClick={handleSend}
+                disabled={!selectedUserId || !draft.trim() || isSending}
+                className="h-10 shrink-0"
+              >
+                {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizontal className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

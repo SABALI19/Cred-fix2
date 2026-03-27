@@ -6,6 +6,14 @@ export interface AuthUser {
   email: string;
   name: string;
   role: "user" | "agent" | "admin";
+  status?: "active" | "suspended";
+  selectedService?: "credit_repair" | "tax_services" | "comprehensive" | null;
+  activePlan?: {
+    name?: string;
+    price?: number | null;
+    serviceType?: "credit_repair" | "tax_services" | "comprehensive" | "" | null;
+    startedAt?: string | null;
+  };
   assignedAgentId?: string | null;
   assignedAgent?: {
     _id: string;
@@ -31,11 +39,22 @@ interface AuthResponse {
   token: string;
 }
 
+export interface AgentOption {
+  _id: string;
+  name: string;
+  email: string;
+  profilePhoto?: string;
+  phone?: string;
+  bio?: string;
+  clientCount: number;
+}
+
 export const authService = {
   async register(payload: {
     name: string;
     email: string;
     password: string;
+    serviceType: "credit_repair" | "tax_services" | "comprehensive";
     phone?: string;
     address?: {
       streetAddress?: string;
@@ -91,17 +110,11 @@ export const authService = {
   },
 
   async getAvailableAgents() {
-    return apiRequest<
-      Array<{
-        _id: string;
-        name: string;
-        email: string;
-        profilePhoto?: string;
-        phone?: string;
-        bio?: string;
-        clientCount: number;
-      }>
-    >("/auth/agents", { method: "GET", auth: true });
+    return apiRequest<AgentOption[]>("/auth/agents", { method: "GET", auth: true });
+  },
+
+  async getPublicAgents() {
+    return apiRequest<AgentOption[]>("/auth/agents/public", { method: "GET" });
   },
 
   async selectAgent(agentId: string | null) {

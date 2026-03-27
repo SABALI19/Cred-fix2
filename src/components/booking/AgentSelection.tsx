@@ -133,14 +133,14 @@ const AgentSelection = ({
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
+      <div className="mb-8 text-center">
         <h3 className="text-xl font-semibold mb-2">{getServiceTitle()}</h3>
         <p className="text-muted-foreground">
           Choose the specialist who will guide your financial journey
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         {agents.map((agent) => {
           const isSelected = selectedAgent?.id === agent.id;
 
@@ -163,9 +163,9 @@ const AgentSelection = ({
                 </div>
               )}
 
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <Avatar className="w-16 h-16">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-0 sm:space-x-4">
+                  <Avatar className="h-16 w-16 self-center sm:self-auto">
                     <AvatarImage src={agent.avatar} alt={agent.name} />
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                       {agent.name
@@ -176,7 +176,7 @@ const AgentSelection = ({
                   </Avatar>
 
                   <div className="flex-1">
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h4 className="font-semibold text-lg">{agent.name}</h4>
                         <p className="text-sm text-muted-foreground mb-2">
@@ -190,7 +190,7 @@ const AgentSelection = ({
                       )}
                     </div>
 
-                    <div className="flex items-center space-x-4 mb-3 text-sm">
+                    <div className="mb-3 flex flex-wrap items-center gap-3 text-sm sm:gap-4">
                       <div className="flex items-center">
                         <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
                         <span className="font-medium">{agent.rating}</span>
@@ -218,7 +218,7 @@ const AgentSelection = ({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 sm:gap-4">
                       <div>
                         <div className="text-muted-foreground">
                           Success Rate
@@ -247,11 +247,11 @@ const AgentSelection = ({
 
       {/* Why Choose Your Specialist */}
       <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h4 className="font-semibold mb-4 text-center">
             Why Choose a Dedicated Specialist?
           </h4>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className="grid gap-4 text-sm md:grid-cols-3">
             <div className="text-center">
               <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
                 <Users className="w-6 h-6 text-primary" />

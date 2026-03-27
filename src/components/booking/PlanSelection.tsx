@@ -117,14 +117,14 @@ const PlanSelection = ({
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
+      <div className="mb-8 text-center">
         <h3 className="text-xl font-semibold mb-2">{getServiceTitle()}</h3>
         <p className="text-muted-foreground">
           Choose the plan that best fits your needs and budget
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid gap-6 md:grid-cols-3">
         {plans.map((plan, index) => {
           const isSelected = selectedPlan?.name === plan.name;
           const savings = plan.originalPrice
@@ -142,7 +142,7 @@ const PlanSelection = ({
               onClick={() => onPlanSelect(plan)}
             >
               {plan.recommended && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2 sm:-top-3 sm:top-auto">
                   <Badge className="bg-orange-500 text-white">
                     <Star className="w-3 h-3 mr-1" />
                     Recommended
@@ -151,7 +151,7 @@ const PlanSelection = ({
               )}
 
               {plan.popular && (
-                <div className="absolute -top-3 right-4">
+                <div className="absolute right-3 top-3 z-10 sm:-top-3 sm:right-4 sm:top-auto">
                   <Badge className="bg-primary text-white">
                     <Zap className="w-3 h-3 mr-1" />
                     Most Popular
@@ -159,16 +159,16 @@ const PlanSelection = ({
                 </div>
               )}
 
-              <CardContent className="p-6">
-                <div className="text-center mb-6">
+              <CardContent className="p-6 pt-12 sm:p-6 sm:pt-8">
+                <div className="mb-6 text-center">
                   <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
                   <div className="mb-4">
-                    <div className="flex items-center justify-center space-x-2">
+                    <div className="flex flex-wrap items-center justify-center gap-2">
                       <span className="text-3xl font-bold">${plan.price}</span>
                       <span className="text-muted-foreground">/month</span>
                     </div>
                     {plan.originalPrice && (
-                      <div className="flex items-center justify-center space-x-2 text-sm">
+                      <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
                         <span className="line-through text-muted-foreground">
                           ${plan.originalPrice}/month
                         </span>
@@ -211,8 +211,8 @@ const PlanSelection = ({
 
       {/* Guarantee */}
       <Card className="bg-green-50 border-green-200">
-        <CardContent className="p-6 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-2">
+        <CardContent className="p-4 text-center sm:p-6">
+          <div className="mb-2 flex flex-col items-center justify-center gap-2 sm:flex-row">
             <Check className="w-5 h-5 text-green-600" />
             <h4 className="font-semibold text-green-800">
               30-Day Money-Back Guarantee
@@ -227,9 +227,9 @@ const PlanSelection = ({
 
       {/* Plan Comparison */}
       <Card className="bg-muted/50">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h4 className="font-semibold mb-4">Need help choosing?</h4>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className="grid gap-4 text-sm md:grid-cols-3">
             <div>
               <h5 className="font-medium mb-2">Essential Plan</h5>
               <p className="text-muted-foreground">

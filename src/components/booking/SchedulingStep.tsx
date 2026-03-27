@@ -7,6 +7,7 @@ import { Calendar, Clock, Video, Phone, MapPin, Check } from "lucide-react";
 interface Schedule {
   date: string;
   time: string;
+  consultationType: string;
 }
 
 interface SchedulingStepProps {
@@ -20,8 +21,10 @@ const SchedulingStep = ({
   selectedSchedule,
   onScheduleSelect,
 }: SchedulingStepProps) => {
-  const [selectedDate, setSelectedDate] = useState("");
-  const [consultationType, setConsultationType] = useState("video");
+  const [selectedDate, setSelectedDate] = useState(selectedSchedule?.date || "");
+  const [consultationType, setConsultationType] = useState(
+    selectedSchedule?.consultationType || "video",
+  );
 
   // Generate available dates (next 14 days, excluding weekends)
   const getAvailableDates = () => {
@@ -67,7 +70,7 @@ const SchedulingStep = ({
 
   const handleTimeSelect = (time: string) => {
     if (selectedDate) {
-      onScheduleSelect({ date: selectedDate, time });
+      onScheduleSelect({ date: selectedDate, time, consultationType });
     }
   };
 
@@ -102,8 +105,8 @@ const SchedulingStep = ({
       {/* Specialist Info */}
       {selectedAgent && (
         <Card className="bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                 <span className="font-semibold text-primary">
                   {selectedAgent.name
@@ -128,7 +131,7 @@ const SchedulingStep = ({
         <h3 className="text-lg font-semibold mb-4">
           How would you like to meet?
         </h3>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid gap-4 md:grid-cols-3">
           {consultationTypes.map((type) => {
             const Icon = type.icon;
             const isSelected = consultationType === type.id;
@@ -141,7 +144,15 @@ const SchedulingStep = ({
                     ? "ring-2 ring-primary border-primary"
                     : "hover:border-primary/50"
                 }`}
-                onClick={() => setConsultationType(type.id)}
+                onClick={() => {
+                  setConsultationType(type.id);
+                  if (selectedSchedule?.date && selectedSchedule?.time) {
+                    onScheduleSelect({
+                      ...selectedSchedule,
+                      consultationType: type.id,
+                    });
+                  }
+                }}
               >
                 <CardContent className="p-4 text-center">
                   {type.recommended && (
@@ -173,7 +184,8 @@ const SchedulingStep = ({
       {/* Date Selection */}
       <div>
         <h3 className="text-lg font-semibold mb-4">Select a date</h3>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="-mx-1 overflow-x-auto pb-2">
+          <div className="grid min-w-[42rem] grid-cols-7 gap-2 px-1 sm:min-w-0">
           {availableDates.map((date) => {
             const isSelected = selectedDate === date.date;
 
@@ -211,6 +223,7 @@ const SchedulingStep = ({
               </Card>
             );
           })}
+          </div>
         </div>
       </div>
 
@@ -220,7 +233,7 @@ const SchedulingStep = ({
           <h3 className="text-lg font-semibold mb-4">
             Choose your preferred time
           </h3>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {timeSlots.map((slot) => {
               const isSelected =
                 selectedSchedule?.time === slot.time &&
@@ -251,7 +264,7 @@ const SchedulingStep = ({
       {/* Selected Schedule Summary */}
       {selectedSchedule && (
         <Card className="bg-green-50 border-green-200">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center space-x-2 mb-2">
               <Check className="w-5 h-5 text-green-600" />
               <h4 className="font-semibold text-green-800">
@@ -259,8 +272,8 @@ const SchedulingStep = ({
               </h4>
             </div>
             <div className="text-sm text-green-700">
-              <div className="flex items-center space-x-4">
-                <span className="flex items-center">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                <span className="flex items-start sm:items-center">
                   <Calendar className="w-4 h-4 mr-1" />
                   {new Date(selectedSchedule.date).toLocaleDateString("en-US", {
                     weekday: "long",
@@ -274,19 +287,19 @@ const SchedulingStep = ({
                   {selectedSchedule.time}
                 </span>
                 <span className="flex items-center">
-                  {consultationType === "video" && (
+                  {selectedSchedule.consultationType === "video" && (
                     <>
                       <Video className="w-4 h-4 mr-1" />
                       Video Call
                     </>
                   )}
-                  {consultationType === "phone" && (
+                  {selectedSchedule.consultationType === "phone" && (
                     <>
                       <Phone className="w-4 h-4 mr-1" />
                       Phone Call
                     </>
                   )}
-                  {consultationType === "office" && (
+                  {selectedSchedule.consultationType === "office" && (
                     <>
                       <MapPin className="w-4 h-4 mr-1" />
                       In Office

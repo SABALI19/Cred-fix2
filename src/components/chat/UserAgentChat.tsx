@@ -12,7 +12,7 @@ import {
   type PresenceSnapshotEvent,
   type TypingEvent,
 } from "@/services/socketClient";
-import { Loader2, MessageCircle, RefreshCw } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, SendHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,16 @@ const formatTimestamp = (value: string) =>
     hour: "numeric",
     minute: "2-digit",
   });
+
+const getInitials = (value?: string) => {
+  if (!value) return "AG";
+  return value
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+};
 
 const UserAgentChat = ({ className }: UserAgentChatProps) => {
   const { user } = useAuth();
@@ -195,7 +205,7 @@ const UserAgentChat = ({ className }: UserAgentChatProps) => {
   };
 
   return (
-    <Card className={className}>
+    <Card className={cn("border-primary/20 bg-background", className)}>
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div>
           <CardTitle className="flex items-center gap-2">
@@ -215,15 +225,15 @@ const UserAgentChat = ({ className }: UserAgentChatProps) => {
         {!agent && !isLoading ? (
           <div className="text-sm text-muted-foreground">
             You have not selected an agent yet.{" "}
-            <Link to="/profile" className="text-primary underline">
-              Choose one in profile settings
+            <Link to="/#agents-list" className="text-primary underline">
+              Choose one from the agents list
             </Link>
             .
           </div>
         ) : null}
 
         {agent ? (
-          <div className="flex items-center justify-between text-sm rounded-md border p-3 bg-muted/20">
+          <div className="flex items-center justify-between text-sm rounded-xl border p-3 bg-muted/20">
             <div>
               <p className="font-medium">{agent.name}</p>
               <p className="text-muted-foreground">{agent.email}</p>
@@ -237,64 +247,101 @@ const UserAgentChat = ({ className }: UserAgentChatProps) => {
           </div>
         ) : null}
 
-        <div className="h-72 overflow-y-auto rounded-md border p-3 space-y-3 bg-muted/10">
-          {isLoading ? (
-            <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Loading messages...
+        <div className="rounded-3xl border border-primary/20 overflow-hidden bg-[#eaf0ff] dark:bg-slate-900">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-primary/20 bg-[#dfe6fb] dark:bg-slate-800/80">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center">
+                {getInitials(agent?.name)}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate">{agent?.name || "No agent selected"}</p>
+                <p className="text-xs text-muted-foreground truncate">{agent?.email || ""}</p>
+              </div>
             </div>
-          ) : messages.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-              No messages yet.
-            </div>
-          ) : (
-            messages.map((message) => {
-              const isMine = message.senderId === user?.id;
-              return (
-                <div
-                  key={message._id}
-                  className={cn("flex", isMine ? "justify-end" : "justify-start")}
-                >
+            <Badge variant={isAgentOnline ? "default" : "secondary"}>
+              {isAgentOnline === null ? "Status..." : isAgentOnline ? "Online" : "Offline"}
+            </Badge>
+          </div>
+
+          <div className="h-[340px] md:h-[420px] overflow-y-auto px-3 py-4 space-y-3">
+            {isLoading ? (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Loading messages...
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+                No messages yet.
+              </div>
+            ) : (
+              messages.map((message) => {
+                const isMine = message.senderId === user?.id;
+                return (
                   <div
-                    className={cn(
-                      "max-w-[80%] rounded-lg px-3 py-2 text-sm",
-                      isMine
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background border",
-                    )}
+                    key={message._id}
+                    className={cn("flex", isMine ? "justify-end" : "justify-start")}
                   >
-                    <p>{message.content}</p>
-                    <p
+                    <div
                       className={cn(
-                        "mt-1 text-[11px]",
-                        isMine ? "text-primary-foreground/80" : "text-muted-foreground",
+                        "max-w-[84%] rounded-2xl px-3 py-2.5 text-sm shadow-sm",
+                        isMine
+                          ? "bg-primary text-primary-foreground rounded-tr-md"
+                          : "bg-background/95 border border-border/60 rounded-tl-md",
                       )}
                     >
-                      {formatTimestamp(message.createdAt)}
-                    </p>
+                      <div className="flex items-end gap-2">
+                        <p className="break-words leading-relaxed">{message.content}</p>
+                        <p
+                          className={cn(
+                            "text-[10px] shrink-0",
+                            isMine ? "text-primary-foreground/80" : "text-muted-foreground",
+                          )}
+                        >
+                          {formatTimestamp(message.createdAt)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+                );
+              })
+            )}
 
-        <div className="space-y-2">
-          {isAgentTyping ? (
-            <p className="text-xs text-muted-foreground">Your agent is typing...</p>
-          ) : null}
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <Textarea
-            placeholder="Type a message to your agent..."
-            value={draft}
-            onChange={(e) => handleDraftChange(e.target.value)}
-            disabled={!agent || isSending}
-            rows={3}
-          />
-          <div className="flex justify-end">
-            <Button onClick={handleSend} disabled={!agent || !draft.trim() || isSending}>
-              {isSending ? "Sending..." : "Send Message"}
-            </Button>
+            {isAgentTyping ? (
+              <div className="flex items-center gap-2">
+                <div className="rounded-2xl bg-background border border-border/70 px-3 py-2 inline-flex items-center gap-1">
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  />
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "120ms" }}
+                  />
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: "240ms" }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Your agent is typing...</p>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="border-t border-primary/20 bg-[#dfe6fb] dark:bg-slate-800/80 px-3 py-3 space-y-2">
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            <div className="flex items-end gap-2">
+              <Textarea
+                placeholder="Type a message to your agent..."
+                value={draft}
+                onChange={(e) => handleDraftChange(e.target.value)}
+                disabled={!agent || isSending}
+                rows={2}
+                className="min-h-[44px] resize-none bg-background/95"
+              />
+              <Button onClick={handleSend} disabled={!agent || !draft.trim() || isSending} className="h-10 shrink-0">
+                {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizontal className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

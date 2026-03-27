@@ -57,36 +57,34 @@ const AppContent = () => {
       />
       <WelcomeSignupModal />
       <Chatbot />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/booking" element={<Booking />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/agent-dashboard" element={<AgentDashboard />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin-management" element={<AdminManagement />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/roi-calculator" element={<ROICalculator />} />
-          <Route path="/help-center" element={<HelpCenter />} />
-          <Route path="/referral-program" element={<ReferralProgram />} />
-          <Route path="/specialists" element={<Specialists />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/ant-demo" element={<AntIndex />} />
-          <Route path="/ant-dashboard" element={<AntDashboard />} />
-          <Route path="/mantine-demo" element={<MantineIndex />} />
-          <Route path="/mantine-dashboard" element={<MantineDashboard />} />
-          <Route path="/live-dashboard" element={<LiveDashboard />} />
-          <Route path="/sign-in" element={<SignIn />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/booking" element={<Booking />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/agent-dashboard" element={<AgentDashboard />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-management" element={<AdminManagement />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/roi-calculator" element={<ROICalculator />} />
+        <Route path="/help-center" element={<HelpCenter />} />
+        <Route path="/referral-program" element={<ReferralProgram />} />
+        <Route path="/specialists" element={<Specialists />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/ant-demo" element={<AntIndex />} />
+        <Route path="/ant-dashboard" element={<AntDashboard />} />
+        <Route path="/mantine-demo" element={<MantineIndex />} />
+        <Route path="/mantine-dashboard" element={<MantineDashboard />} />
+        <Route path="/live-dashboard" element={<LiveDashboard />} />
+        <Route path="/sign-in" element={<SignIn />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </>
   );
 };
@@ -99,11 +97,13 @@ const App = () => (
         <ThemeProvider defaultTheme="system" storageKey="creditfix-ui-theme">
           <AuthProvider>
             <ChatbotProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <AppContent />
-            </TooltipProvider>
+              <BrowserRouter>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <AppContent />
+                </TooltipProvider>
+              </BrowserRouter>
             </ChatbotProvider>
           </AuthProvider>
         </ThemeProvider>

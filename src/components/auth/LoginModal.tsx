@@ -13,9 +13,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, Loader2, Shield } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import PasswordReset from "./PasswordReset";
+import { useNavigate } from "react-router-dom";
 
 const LoginModal = () => {
   const { isLoginOpen, closeLogin, openSignUp, login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +38,7 @@ const LoginModal = () => {
           : loggedInUser.role === "agent"
             ? "/agent-dashboard"
             : "/dashboard";
-      window.location.href = dashboardPath;
+      navigate(dashboardPath);
     } catch (err) {
       setError(
         err instanceof Error

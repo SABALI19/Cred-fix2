@@ -101,7 +101,7 @@ const InformationStep = ({
     <div className="space-y-6">
       {/* Personal Information */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -148,7 +148,7 @@ const InformationStep = ({
 
       {/* Credit Information */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="text-lg font-semibold mb-4">Credit Information</h3>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -175,7 +175,7 @@ const InformationStep = ({
 
       {/* Financial Goals */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="text-lg font-semibold mb-4">
             What are your financial goals? *
           </h3>
@@ -183,7 +183,7 @@ const InformationStep = ({
             Select all that apply to help us understand how we can best assist
             you.
           </p>
-          <div className="grid md:grid-cols-3 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {financialGoals.map((goal) => (
               <div
                 key={goal}
@@ -221,7 +221,7 @@ const InformationStep = ({
 
       {/* Additional Information */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="text-lg font-semibold mb-4">
             Additional Information (Optional)
           </h3>

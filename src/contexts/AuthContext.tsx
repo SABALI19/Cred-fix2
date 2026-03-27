@@ -14,6 +14,14 @@ interface User {
   email: string;
   name: string;
   role: "user" | "agent" | "admin";
+  status?: "active" | "suspended";
+  selectedService?: "credit_repair" | "tax_services" | "comprehensive" | null;
+  activePlan?: {
+    name?: string;
+    price?: number | null;
+    serviceType?: "credit_repair" | "tax_services" | "comprehensive" | "" | null;
+    startedAt?: string | null;
+  };
   assignedAgentId?: string | null;
   assignedAgent?: {
     _id: string;
@@ -45,7 +53,8 @@ interface AuthContextType {
     name: string,
     email: string,
     password: string,
-    details?: {
+    details: {
+      serviceType: "credit_repair" | "tax_services" | "comprehensive";
       phone?: string;
       address?: {
         streetAddress?: string;
@@ -85,6 +94,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     email: u.email,
     name: u.name,
     role: u.role,
+    status: u.status ?? "active",
+    selectedService: u.selectedService ?? null,
+    activePlan: u.activePlan,
     assignedAgentId: u.assignedAgentId ?? null,
     assignedAgent: u.assignedAgent ?? null,
     profilePhoto: u.profilePhoto,
@@ -171,6 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       name,
       email,
       password,
+      serviceType: details.serviceType,
       phone: details?.phone,
       address: details?.address,
     });

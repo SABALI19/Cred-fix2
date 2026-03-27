@@ -16,6 +16,27 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "agent", "admin"],
       default: "user",
     },
+    status: {
+      type: String,
+      enum: ["active", "suspended"],
+      default: "active",
+      index: true,
+    },
+    selectedService: {
+      type: String,
+      enum: ["credit_repair", "tax_services", "comprehensive"],
+      default: null,
+    },
+    activePlan: {
+      name: { type: String, trim: true, default: "" },
+      price: { type: Number, default: null },
+      serviceType: {
+        type: String,
+        enum: ["credit_repair", "tax_services", "comprehensive", ""],
+        default: "",
+      },
+      startedAt: { type: Date, default: null },
+    },
     assignedAgentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -34,6 +34,7 @@ import {
   RefreshCw,
   FileText,
   Clock3,
+  MessageSquare,
 } from "lucide-react";
 import type { PieLabelRenderProps } from "recharts";
 import {
@@ -50,6 +51,7 @@ import {
 } from "recharts";
 import { Link } from "react-router-dom";
 import { adminService, type AdminDashboardData } from "@/services/adminService";
+import AgentClientInbox from "@/components/chat/AgentClientInbox";
 
 const OVERVIEW_COLORS = ["#3b82f6", "#22c55e", "#f59e0b"];
 const CASE_COLORS = ["#f59e0b", "#3b82f6", "#22c55e", "#ef4444"];
@@ -102,6 +104,20 @@ const formatDate = (value: string) =>
     day: "numeric",
     year: "numeric",
   });
+
+const formatServiceLabel = (value?: string | null) =>
+  value ? value.replaceAll("_", " ") : "Not set";
+
+const formatConsultationType = (value?: string | null) =>
+  value ? value.replaceAll("_", " ") : "Not set";
+
+const formatCurrency = (value?: number | null) =>
+  value === null || value === undefined
+    ? "N/A"
+    : new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      }).format(value);
 
 const getRoleBadge = (role: "user" | "agent" | "admin") => {
   switch (role) {
@@ -164,6 +180,7 @@ const getSeverityBadge = (severity: string) => {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const [isChatVisible, setIsChatVisible] = useState(false);
   const [dashboard, setDashboard] = useState<AdminDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -234,6 +251,14 @@ const AdminDashboard = () => {
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
+              <Button
+                variant={isChatVisible ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsChatVisible((prev) => !prev)}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                {isChatVisible ? "Hide Chat" : "Open Chat"}
+              </Button>
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
                 Export Report
@@ -267,6 +292,8 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
           ) : null}
+
+          {isChatVisible ? <AgentClientInbox className="mb-8" /> : null}
 
           {/* System Overview Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -518,6 +545,174 @@ const AdminDashboard = () => {
                   </TableBody>
                 </Table>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Clients Under Agents</CardTitle>
+              <CardDescription>
+                Assigned users, their active plans, and their latest saved appointment.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {(dashboard?.agentPortfolios || []).map((portfolio) => (
+                <div key={portfolio.id} className="rounded-xl border border-border/70">
+                  <div className="flex flex-col gap-2 border-b px-4 py-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h3 className="font-semibold">{portfolio.name}</h3>
+                      <p className="text-sm text-muted-foreground">{portfolio.email}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline">{portfolio.clientCount} clients</Badge>
+                      <Badge variant="secondary">{portfolio.activePlanCount} active plans</Badge>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Service</TableHead>
+                          <TableHead>Active Plan</TableHead>
+                          <TableHead>Latest Appointment</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {portfolio.clients.map((client) => (
+                          <TableRow key={client.id}>
+                            <TableCell>
+                              <div className="font-medium">{client.name}</div>
+                              <div className="text-xs text-muted-foreground">{client.email}</div>
+                            </TableCell>
+                            <TableCell className="capitalize">
+                              {formatServiceLabel(client.selectedService)}
+                            </TableCell>
+                            <TableCell>
+                              {client.activePlan.name ? (
+                                <div>
+                                  <div className="font-medium">{client.activePlan.name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {formatCurrency(client.activePlan.price)}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  No active plan
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {client.latestAppointment?.schedule.date ? (
+                                <div>
+                                  <div className="font-medium">
+                                    {formatDate(client.latestAppointment.schedule.date)} at{" "}
+                                    {client.latestAppointment.schedule.time || "TBD"}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    With{" "}
+                                    {client.latestAppointment.agent.name || portfolio.name}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  No appointment
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={client.status === "active" ? "secondary" : "destructive"}
+                              >
+                                {client.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {portfolio.clients.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={5}
+                              className="text-center text-sm text-muted-foreground"
+                            >
+                              No assigned clients for this agent yet.
+                            </TableCell>
+                          </TableRow>
+                        ) : null}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>User Appointments</CardTitle>
+              <CardDescription>
+                Scheduled consultations showing which user booked with which agent.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Appointment</TableHead>
+                    <TableHead>Agent</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(dashboard?.appointments || []).map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell>
+                        <div className="font-medium">{appointment.user.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {appointment.user.email}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">{appointment.plan.name || "No plan"}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatServiceLabel(appointment.serviceType)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {appointment.schedule.date
+                            ? `${formatDate(appointment.schedule.date)} at ${
+                                appointment.schedule.time || "TBD"
+                              }`
+                            : "Not scheduled"}
+                        </div>
+                        <div className="text-xs text-muted-foreground capitalize">
+                          {formatConsultationType(appointment.schedule.consultationType)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {appointment.agent.name || "Unassigned"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {appointment.agent.title || "Agent"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={appointment.status === "closed" ? "outline" : "secondary"}
+                        >
+                          {appointment.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
 

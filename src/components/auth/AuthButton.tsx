@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface AuthButtonProps {
   children: ReactNode;
@@ -26,11 +27,12 @@ const AuthButton = ({
   redirectTo,
 }: AuthButtonProps) => {
   const { user, openSignUp, openLogin } = useAuth();
+  const navigate = useNavigate();
 
   const handleClick = () => {
     if (user && redirectTo) {
       // If user is logged in and we have a redirect, navigate there
-      window.location.href = redirectTo;
+      navigate(redirectTo);
     } else if (!user) {
       // If user is not logged in, show auth modal
       if (action === "login") {

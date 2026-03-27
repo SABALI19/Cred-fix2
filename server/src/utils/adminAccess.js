@@ -28,5 +28,6 @@ export const toAuthUser = (user) => {
   return {
     ...payload,
     role: resolveEffectiveRole(user),
+    status: user?.status || payload.status || "active",
   };
 };

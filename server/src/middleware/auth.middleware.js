@@ -26,6 +26,13 @@ export const requireAuth = async (req, res, next) => {
       });
     }
 
+    if (user.status === "suspended") {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "Account suspended",
+      });
+    }
+
     req.auth = { userId: user._id.toString(), role: resolveEffectiveRole(user) };
     req.user = user;
     return next();

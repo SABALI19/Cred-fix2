@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { ContactMessage } from "../models/ContactMessage.js";
+import { requireAuth } from "../middleware/auth.middleware.js";
+import { requireAdmin } from "../middleware/admin.middleware.js";
 
 const router = Router();
 
@@ -29,7 +31,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.get("/", async (_req, res, next) => {
+router.get("/", requireAuth, requireAdmin, async (_req, res, next) => {
   try {
     const data = await ContactMessage.find().sort({ createdAt: -1 }).limit(200).lean();
     res.json(data);

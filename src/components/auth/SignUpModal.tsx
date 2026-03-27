@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,9 +21,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import TermsAndConditions from "@/components/legal/TermsAndConditions";
 import { Eye, EyeOff, Loader2, Shield, UserPlus } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
+
+const SERVICE_OPTIONS = [
+  { id: "credit_repair", label: "Credit Repair" },
+  { id: "tax_services", label: "Tax Services" },
+  { id: "comprehensive", label: "Comprehensive Plan" },
+] as const;
+
+type ServiceType = (typeof SERVICE_OPTIONS)[number]["id"];
 
 const SignUpModal = () => {
   const { isSignUpOpen, closeSignUp, openLogin, signUp } = useAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +43,7 @@ const SignUpModal = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedServiceType, setSelectedServiceType] = useState<ServiceType | "">("");
 
   // Address fields
   const [streetAddress, setStreetAddress] = useState("");
@@ -88,6 +99,11 @@ const SignUpModal = () => {
       return;
     }
 
+    if (!selectedServiceType) {
+      setError("Please choose a service first");
+      return;
+    }
+
     if (!acceptTerms) {
       setError("Please accept the terms and conditions");
       return;
@@ -97,6 +113,7 @@ const SignUpModal = () => {
 
     try {
       await signUp(name, email, password, {
+        serviceType: selectedServiceType,
         phone: "",
         address: {
           streetAddress,
@@ -105,8 +122,9 @@ const SignUpModal = () => {
           zipCode,
         },
       });
+      navigate("/#agents-list");
     } catch (err) {
-      setError("Failed to create account. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -121,6 +139,7 @@ const SignUpModal = () => {
     setCity("");
     setState("");
     setZipCode("");
+    setSelectedServiceType("");
     setAcceptTerms(false);
     setError("");
   };
@@ -184,6 +203,31 @@ const SignUpModal = () => {
               disabled={isLoading}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="selected-service">Choose Service *</Label>
+            <Select
+              value={selectedServiceType}
+              onValueChange={(value) => setSelectedServiceType(value as ServiceType)}
+              disabled={isLoading}
+            >
+              <SelectTrigger id="selected-service">
+                <SelectValue placeholder="Select the service you want" />
+              </SelectTrigger>
+              <SelectContent>
+                {SERVICE_OPTIONS.map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            After signup, you will be redirected to the agents list to choose
+            your preferred agent.
+          </p>
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -403,7 +447,8 @@ const SignUpModal = () => {
               !streetAddress.trim() ||
               !city.trim() ||
               !state ||
-              !zipCode.trim()
+              !zipCode.trim() ||
+              !selectedServiceType
             }
           >
             {isLoading ? (

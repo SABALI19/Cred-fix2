@@ -16,12 +16,14 @@ import {
 import type { BookingData } from "./BookingFlow";
 import { useEffect, useRef, useState } from "react";
 import { consultationService } from "@/services/consultationService";
+import { useNavigate } from "react-router-dom";
 
 interface ConfirmationStepProps {
   bookingData: BookingData;
 }
 
 const ConfirmationStep = ({ bookingData }: ConfirmationStepProps) => {
+  const navigate = useNavigate();
   const confirmationNumber = `CF${Date.now().toString().slice(-6)}`;
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
@@ -52,6 +54,7 @@ const ConfirmationStep = ({ bookingData }: ConfirmationStepProps) => {
       `Plan: ${bookingData.plan?.name || "n/a"}`,
       `Agent: ${bookingData.agent?.name || "n/a"}`,
       `Schedule: ${bookingData.schedule?.date || "n/a"} ${bookingData.schedule?.time || ""}`.trim(),
+      `Consultation Type: ${bookingData.schedule?.consultationType || "n/a"}`,
       `Credit Score: ${bookingData.information?.creditScore || "n/a"}`,
       `Goals: ${(bookingData.information?.goals || []).join(", ") || "n/a"}`,
       `Notes: ${bookingData.information?.notes || "n/a"}`,
@@ -63,6 +66,32 @@ const ConfirmationStep = ({ bookingData }: ConfirmationStepProps) => {
         email,
         phone: bookingData.information?.phone || "",
         message,
+        serviceType: bookingData.service
+          ? (bookingData.service as
+              | "credit_repair"
+              | "tax_services"
+              | "comprehensive")
+          : null,
+        plan: bookingData.plan
+          ? {
+              name: bookingData.plan.name,
+              price: bookingData.plan.price,
+            }
+          : null,
+        agent: bookingData.agent
+          ? {
+              id: bookingData.agent.id,
+              name: bookingData.agent.name,
+              title: bookingData.agent.title,
+            }
+          : null,
+        schedule: bookingData.schedule
+          ? {
+              date: bookingData.schedule.date,
+              time: bookingData.schedule.time,
+              consultationType: bookingData.schedule.consultationType,
+            }
+          : null,
       })
       .then(() => setSaveStatus("saved"))
       .catch(() => setSaveStatus("error"));
@@ -101,13 +130,7 @@ Thank you for choosing CreditFix Pro!
 
   const handleGoToDashboard = () => {
     console.log("Go to dashboard clicked");
-    try {
-      window.location.href = "/dashboard";
-    } catch (error) {
-      console.error("Navigation failed:", error);
-      // Fallback navigation
-      window.location.assign("/dashboard");
-    }
+    navigate("/dashboard");
   };
 
   return (
@@ -120,11 +143,11 @@ Thank you for choosing CreditFix Pro!
           </div>
         </div>
         <div>
-          <h2 className="text-3xl font-bold text-green-800 mb-2">
+          <h2 className="mb-2 text-2xl font-bold text-green-800 sm:text-3xl">
             Booking Confirmed!
           </h2>
-          <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-6 mb-4">
-            <div className="flex items-center justify-center space-x-2 mb-2">
+          <div className="mb-4 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 p-4 sm:p-6">
+            <div className="mb-2 flex flex-col items-center justify-center gap-2 sm:flex-row sm:space-x-2">
               <Heart className="w-6 h-6 text-primary" />
               <span className="text-xl font-semibold text-primary">
                 We're excited to help you with your credit and tax goals!
@@ -142,10 +165,10 @@ Thank you for choosing CreditFix Pro!
       </div>
 
       {/* Booking Details */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Consultation Details */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <h3 className="font-semibold mb-4 flex items-center">
               <Calendar className="w-5 h-5 mr-2 text-primary" />
               Consultation Details
@@ -166,6 +189,9 @@ Thank you for choosing CreditFix Pro!
                         },
                       )}{" "}
                       at {bookingData.schedule.time}
+                    </p>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {bookingData.schedule.consultationType.replace("_", " ")}
                     </p>
                   </div>
                 </>
@@ -194,7 +220,7 @@ Thank you for choosing CreditFix Pro!
         {/* Specialist Info */}
         {bookingData.agent && (
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <h3 className="font-semibold mb-4 flex items-center">
                 <User className="w-5 h-5 mr-2 text-primary" />
                 Your Specialist
@@ -225,12 +251,12 @@ Thank you for choosing CreditFix Pro!
       {/* Contact Information */}
       {bookingData.information && (
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <h3 className="font-semibold mb-4 text-center">
               We'll be in touch at:
             </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-center space-x-2">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex items-center justify-center space-x-2 break-all sm:break-normal">
                 <Mail className="w-4 h-4 text-primary" />
                 <span>{bookingData.information.email}</span>
               </div>
@@ -245,9 +271,9 @@ Thank you for choosing CreditFix Pro!
 
       {/* What Happens Next */}
       <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="font-semibold mb-4">What Happens Next?</h3>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className="grid gap-4 text-sm md:grid-cols-3">
             <div className="text-center">
               <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
                 <span className="font-bold text-primary">1</span>
@@ -312,12 +338,12 @@ Thank you for choosing CreditFix Pro!
 
       {/* Customer Support */}
       <Card className="bg-muted/50">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h4 className="font-semibold mb-2">Need Help?</h4>
           <p className="text-sm text-muted-foreground mb-4">
             Our customer support team is here to assist you with any questions.
           </p>
-          <div className="flex justify-center space-x-4 text-sm">
+          <div className="flex flex-col items-center justify-center gap-3 text-sm sm:flex-row sm:gap-4">
             <button
               onClick={() => (window.location.href = "tel:+15551234567")}
               className="flex items-center space-x-1 text-primary hover:text-primary/80 transition-colors cursor-pointer"

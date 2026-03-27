@@ -35,7 +35,9 @@ import {
   Download,
   DollarSign,
   Edit,
+  MessageSquare,
   User,
+  Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -60,60 +62,32 @@ const Dashboard = () => {
   const [isRefundOptimizationOpen, setIsRefundOptimizationOpen] =
     useState(false);
   const [isAuditProtectionOpen, setIsAuditProtectionOpen] = useState(false);
-  // Dashboard Data
-  const currentScore = 720;
-  const previousScore = 675; // Last month's score
-  const resolvedDisputes = 12;
-  const inProgressDisputes = 5;
-  const pendingDisputes = 3;
-  const accountsGoodStanding = 13;
-  const accountsNeedingAttention = 2;
+  const [isChatVisible, setIsChatVisible] = useState(false);
+  // New users start from a true empty state.
+  const currentScore = 0;
+  const previousScore = 0;
+  const resolvedDisputes = 0;
+  const inProgressDisputes = 0;
+  const pendingDisputes = 0;
+  const accountsGoodStanding = 0;
+  const accountsNeedingAttention = 0;
+  const monthlyProgress: Array<{ month: string; score: number }> = [];
+  const recentActivity: Array<{
+    type: string;
+    title: string;
+    description: string;
+    status: string;
+    date: string;
+    icon: typeof FileText;
+  }> = [];
 
-  // Monthly progress data for line chart
-  const monthlyProgress = [
-    { month: "Jan", score: 580 },
-    { month: "Feb", score: 595 },
-    { month: "Mar", score: 620 },
-    { month: "Apr", score: 645 },
-    { month: "May", score: 680 },
-    { month: "Jun", score: 720 },
-  ];
-
-  // Recent activity data
-  const recentActivity = [
-    {
-      type: "dispute",
-      title: "Late Payment Dispute Filed",
-      description: "Chase Credit Card - Late payment from 2022",
-      status: "in-progress",
-      date: "2 days ago",
-      icon: FileText,
-    },
-    {
-      type: "improvement",
-      title: "Credit Score Increased",
-      description: "Your score improved by 15 points",
-      status: "success",
-      date: "1 week ago",
-      icon: TrendingUp,
-    },
-    {
-      type: "resolved",
-      title: "Collection Account Removed",
-      description: "Medical collection account successfully removed",
-      status: "success",
-      date: "2 weeks ago",
-      icon: CheckCircle2,
-    },
-    {
-      type: "dispute",
-      title: "Credit Inquiry Dispute",
-      description: "Unauthorized hard inquiry from ABC Lending",
-      status: "pending",
-      date: "3 weeks ago",
-      icon: AlertCircle,
-    },
-  ];
+  const scoreDelta = currentScore - previousScore;
+  const totalDisputes = resolvedDisputes + inProgressDisputes + pendingDisputes;
+  const totalAccounts = accountsGoodStanding + accountsNeedingAttention;
+  const goalTarget = 750;
+  const goalProgress = currentScore > 0 ? Math.min(100, Math.round((currentScore / goalTarget) * 100)) : 0;
+  const hasMonthlyTrend = monthlyProgress.length > 0;
+  const hasRecentActivity = recentActivity.length > 0;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -253,6 +227,28 @@ const Dashboard = () => {
                 <Calendar className="w-4 h-4 mr-2" />
                 <span className="sm:inline">Schedule Call</span>
               </Button>
+              {user?.role === "user" ? (
+                user.assignedAgentId ? (
+                  <Button
+                    variant={isChatVisible ? "default" : "outline"}
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => setIsChatVisible((prev) => !prev)}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    <span className="sm:inline">{isChatVisible ? "Hide Chat" : "Open Chat"}</span>
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => window.location.assign("/#agents-list")}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Choose Preferred Agent
+                  </Button>
+                )
+              ) : null}
             </div>
           </div>
 
@@ -273,7 +269,20 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {user?.role === "user" ? <UserAgentChat className="mb-8" /> : null}
+          {user?.role === "user" && user.selectedService && !user.assignedAgentId ? (
+            <Card className="mb-8 border-amber-300 bg-amber-50/60">
+              <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-sm text-amber-900">
+                  You selected a service. Choose your preferred agent to continue.
+                </p>
+                <Button size="sm" onClick={() => window.location.assign("/#agents-list")}>
+                  View Agents List
+                </Button>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {user?.role === "user" && isChatVisible ? <UserAgentChat className="mb-8" /> : null}
 
           {/* IRS Security Alert */}
           <Card className="mb-8 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-red-200">
@@ -346,10 +355,16 @@ const Dashboard = () => {
                 <TrendingUp className="h-4 w-4 text-accent" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-accent">720</div>
+                <div className="text-2xl font-bold text-accent">{currentScore}</div>
                 <div className="flex items-center text-xs text-muted-foreground">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +45 this month
+                  {scoreDelta > 0 ? (
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                  ) : scoreDelta < 0 ? (
+                    <TrendingDown className="h-3 w-3 mr-1" />
+                  ) : (
+                    <Clock className="h-3 w-3 mr-1" />
+                  )}
+                  {scoreDelta === 0 ? "No change yet" : `${scoreDelta > 0 ? "+" : ""}${scoreDelta} this month`}
                 </div>
               </CardContent>
             </Card>
@@ -362,10 +377,10 @@ const Dashboard = () => {
                 <FileText className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">20</div>
+                <div className="text-2xl font-bold">{totalDisputes}</div>
                 <div className="flex items-center text-xs text-muted-foreground">
                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                  12 resolved
+                  {resolvedDisputes} resolved
                 </div>
               </CardContent>
             </Card>
@@ -378,10 +393,12 @@ const Dashboard = () => {
                 <CreditCard className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">15</div>
+                <div className="text-2xl font-bold">{totalAccounts}</div>
                 <div className="flex items-center text-xs text-muted-foreground">
                   <Shield className="h-3 w-3 mr-1" />
-                  85% good standing
+                  {totalAccounts === 0
+                    ? "0% good standing"
+                    : `${Math.round((accountsGoodStanding / totalAccounts) * 100)}% good standing`}
                 </div>
               </CardContent>
             </Card>
@@ -394,10 +411,10 @@ const Dashboard = () => {
                 <Target className="h-4 w-4 text-purple-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">85%</div>
+                <div className="text-2xl font-bold">{goalProgress}%</div>
                 <div className="flex items-center text-xs text-muted-foreground">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  Target: 750
+                  Target: {goalTarget}
                 </div>
               </CardContent>
             </Card>
@@ -447,39 +464,45 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyProgress}>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        className="stroke-muted"
-                      />
-                      <XAxis dataKey="month" className="text-xs" />
-                      <YAxis
-                        domain={["dataMin - 10", "dataMax + 10"]}
-                        className="text-xs"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="score"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={3}
-                        dot={{
-                          fill: "hsl(var(--primary))",
-                          strokeWidth: 2,
-                          r: 4,
-                        }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                {hasMonthlyTrend ? (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyProgress}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          className="stroke-muted"
+                        />
+                        <XAxis dataKey="month" className="text-xs" />
+                        <YAxis
+                          domain={["dataMin - 10", "dataMax + 10"]}
+                          className="text-xs"
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="score"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={3}
+                          dot={{
+                            fill: "hsl(var(--primary))",
+                            strokeWidth: 2,
+                            r: 4,
+                          }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-64 rounded-lg border border-dashed border-border/80 bg-muted/20 flex items-center justify-center text-sm text-muted-foreground">
+                    Empty state: no score trend yet.
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -493,9 +516,8 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 max-h-64 overflow-y-auto">
-                  {recentActivity.map((activity, index) => {
-                    const Icon = activity.icon;
-                    return (
+                  {hasRecentActivity ? (
+                    recentActivity.map((activity, index) => (
                       <div
                         key={index}
                         className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors"
@@ -518,8 +540,12 @@ const Dashboard = () => {
                           </p>
                         </div>
                       </div>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-border/80 bg-muted/20 p-4 text-sm text-muted-foreground">
+                      Empty state: no recent activity yet.
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -643,9 +669,9 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground mb-3">
                     Reduce credit utilization to under 30% on all cards
                   </p>
-                  <Progress value={65} className="h-2" />
+                  <Progress value={0} className="h-2" />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Current: 65% target: 30%
+                    Current: 0% target: 30%
                   </p>
                 </div>
 
@@ -657,9 +683,9 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground mb-3">
                     Regular monitoring for new negative items
                   </p>
-                  <Progress value={90} className="h-2" />
+                  <Progress value={0} className="h-2" />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Last check: 2 days ago
+                    Last check: not started
                   </p>
                 </div>
 
@@ -671,9 +697,9 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground mb-3">
                     Keep old accounts open to maintain credit history
                   </p>
-                  <Progress value={85} className="h-2" />
+                  <Progress value={0} className="h-2" />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Avg age: 8.5 years
+                    Avg age: 0 years
                   </p>
                 </div>
               </div>

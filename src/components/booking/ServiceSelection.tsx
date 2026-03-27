@@ -77,13 +77,13 @@ const ServiceSelection = ({
   return (
     <div className="space-y-6">
       {selectedService && (
-        <div className="text-center mb-4">
+        <div className="mb-4 text-center">
           <p className="text-sm text-green-600 font-medium">
             ✓ {services.find((s) => s.id === selectedService)?.name} selected
           </p>
         </div>
       )}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
         {services.map((service) => {
           const Icon = service.icon;
           const isSelected = selectedService === service.id;
@@ -99,9 +99,9 @@ const ServiceSelection = ({
               onClick={() => handleServiceClick(service.id)}
               style={{ pointerEvents: "auto" }}
             >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
+              <CardContent className="p-4 sm:p-6">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-start space-x-3">
                     <div
                       className={`p-2 rounded-lg ${
                         isSelected
@@ -112,8 +112,8 @@ const ServiceSelection = ({
                       <Icon className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">{service.name}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
+                      <h3 className="text-base font-semibold sm:text-lg">{service.name}</h3>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
                         <div className="flex items-center">
                           <Star className="w-4 h-4 text-yellow-400 fill-current" />
                           <span className="text-sm text-muted-foreground ml-1">
@@ -127,19 +127,21 @@ const ServiceSelection = ({
                       </div>
                     </div>
                   </div>
-                  {service.popular && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-orange-100 text-orange-800"
-                    >
-                      Popular
-                    </Badge>
-                  )}
-                  {isSelected && (
-                    <div className="bg-primary text-white rounded-full p-1">
-                      <Check className="w-4 h-4" />
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    {service.popular && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-orange-100 text-orange-800"
+                      >
+                        Popular
+                      </Badge>
+                    )}
+                    {isSelected && (
+                      <div className="bg-primary text-white rounded-full p-1">
+                        <Check className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <p className="text-muted-foreground mb-4 text-sm">
@@ -173,11 +175,11 @@ const ServiceSelection = ({
 
       {/* Service Comparison */}
       <Card className="bg-muted/50">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="font-semibold mb-4">
             Not sure which service to choose?
           </h3>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className="grid gap-4 text-sm md:grid-cols-3">
             <div>
               <h4 className="font-medium mb-2">Choose Credit Repair if:</h4>
               <ul className="space-y-1 text-muted-foreground">

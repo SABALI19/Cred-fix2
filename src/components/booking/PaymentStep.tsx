@@ -185,10 +185,10 @@ const PaymentStep = ({
     <div className="space-y-6">
       {/* Order Summary */}
       <Card className="bg-gradient-to-r from-primary/5 to-accent/5">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h4 className="font-medium">
                   {bookingData.service
@@ -207,7 +207,7 @@ const PaymentStep = ({
             </div>
 
             {bookingData.agent && (
-              <div className="flex items-center space-x-3 p-3 bg-white rounded-lg">
+              <div className="flex items-center space-x-3 rounded-lg bg-white p-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                   <User className="w-5 h-5 text-primary" />
                 </div>
@@ -223,7 +223,7 @@ const PaymentStep = ({
             )}
 
             {bookingData.schedule && (
-              <div className="flex items-center space-x-3 p-3 bg-white rounded-lg">
+              <div className="flex items-start space-x-3 rounded-lg bg-white p-3 sm:items-center">
                 <Calendar className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium text-sm">
@@ -254,7 +254,7 @@ const PaymentStep = ({
 
       {/* Payment Method */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center space-x-2 mb-4">
             <CreditCard className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">Payment Information</h3>
@@ -274,7 +274,7 @@ const PaymentStep = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="expiryDate">Expiry Date *</Label>
                 <Input
@@ -306,7 +306,7 @@ const PaymentStep = ({
 
       {/* Billing Address */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center space-x-2 mb-4">
             <MapPin className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">Billing Address</h3>
@@ -401,14 +401,14 @@ const PaymentStep = ({
 
       {/* Security & Guarantees */}
       <Card className="bg-green-50 border-green-200">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center space-x-2 mb-4">
             <Shield className="w-5 h-5 text-green-600" />
             <h4 className="font-semibold text-green-800">
               Security & Guarantees
             </h4>
           </div>
-          <div className="grid md:grid-cols-2 gap-4 text-sm text-green-700">
+          <div className="grid gap-4 text-sm text-green-700 md:grid-cols-2">
             <div className="flex items-center space-x-2">
               <Lock className="w-4 h-4" />
               <span>256-bit SSL encryption</span>

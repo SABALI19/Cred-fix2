@@ -27,6 +27,7 @@ export interface BookingData {
   schedule: {
     date: string;
     time: string;
+    consultationType: string;
   } | null;
   information: {
     firstName: string;
@@ -56,6 +57,39 @@ const steps = [
   { id: 7, name: "Confirmation", description: "You're all set!" },
 ];
 
+const isInformationComplete = (information: BookingData["information"]) => {
+  if (!information) {
+    return false;
+  }
+
+  return Boolean(
+    information.firstName.trim() &&
+      information.lastName.trim() &&
+      information.email.trim() &&
+      information.phone.trim() &&
+      information.creditScore &&
+      information.goals.length > 0,
+  );
+};
+
+const isPaymentComplete = (payment: BookingData["payment"]) => {
+  if (!payment) {
+    return false;
+  }
+
+  return Boolean(
+    payment.cardNumber.replace(/\s/g, "").length >= 13 &&
+      payment.expiryDate.length === 5 &&
+      payment.cvv.length >= 3 &&
+      payment.billingAddress?.firstName?.trim() &&
+      payment.billingAddress?.lastName?.trim() &&
+      payment.billingAddress?.address?.trim() &&
+      payment.billingAddress?.city?.trim() &&
+      payment.billingAddress?.state &&
+      payment.billingAddress?.zipCode?.trim(),
+  );
+};
+
 const BookingFlow = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState<BookingData>({
@@ -77,7 +111,7 @@ const BookingFlow = () => {
   };
 
   const nextStep = () => {
-    if (currentStep < steps.length) {
+    if (currentStep < steps.length && canProceed) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -99,16 +133,9 @@ const BookingFlow = () => {
       case 4:
         return bookingData.schedule !== null;
       case 5:
-        return (
-          bookingData.information !== null &&
-          bookingData.information.firstName.trim() !== "" &&
-          bookingData.information.lastName.trim() !== "" &&
-          bookingData.information.email.trim() !== "" &&
-          bookingData.information.creditScore !== "" &&
-          bookingData.information.goals.length > 0
-        );
+        return isInformationComplete(bookingData.information);
       case 6:
-        return bookingData.payment !== null;
+        return isPaymentComplete(bookingData.payment);
       default:
         return false;
     }
@@ -118,14 +145,23 @@ const BookingFlow = () => {
 
   const goToStep = (stepNumber: number) => {
     console.log(`Clicking step ${stepNumber}, current step: ${currentStep}`);
+    if (!canNavigateToStep(stepNumber)) {
+      return;
+    }
     setCurrentStep(stepNumber);
     console.log(`Successfully navigated to step ${stepNumber}`);
   };
 
   const canNavigateToStep = (stepNumber: number) => {
-    // For now, allow navigation to any step for testing
-    return true;
-    // Original logic: stepNumber === 1 || stepNumber <= currentStep || (stepNumber === currentStep + 1 && canProceed)
+    if (stepNumber <= currentStep) {
+      return true;
+    }
+
+    if (stepNumber === currentStep + 1) {
+      return canProceed;
+    }
+
+    return false;
   };
 
   const renderStep = () => {
@@ -188,12 +224,12 @@ const BookingFlow = () => {
   const progressPercentage = ((currentStep - 1) / (steps.length - 1)) * 100;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl">
       {/* Progress Header */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
+      <Card className="mb-6 sm:mb-8">
+        <CardContent className="p-4 sm:p-6">
           <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
+            <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm font-medium text-muted-foreground">
                 Step {currentStep} of {steps.length}
               </span>
@@ -205,12 +241,13 @@ const BookingFlow = () => {
           </div>
 
           {/* Step indicators */}
-          <div className="flex items-center justify-between">
+          <div className="-mx-1 overflow-x-auto pb-2">
+            <div className="flex min-w-max items-start gap-2 px-1 sm:min-w-0 sm:justify-between sm:gap-0">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all duration-200 sm:h-9 sm:w-9 ${
                       currentStep > step.id
                         ? "bg-green-500 text-white cursor-pointer hover:bg-green-600"
                         : currentStep === step.id
@@ -236,27 +273,28 @@ const BookingFlow = () => {
                       step.id
                     )}
                   </div>
-                  <div className="mt-2 text-center">
-                    <div className="text-xs font-medium">{step.name}</div>
-                    <div className="text-xs text-muted-foreground hidden sm:block">
+                  <div className="mt-2 w-16 text-center sm:w-20">
+                    <div className="text-xs font-medium sm:text-sm">{step.name}</div>
+                    <div className="hidden text-xs text-muted-foreground sm:block">
                       {step.description}
                     </div>
                   </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <ChevronRight className="w-4 h-4 text-muted-foreground mx-2 mt-[-20px]" />
+                  <ChevronRight className="mx-1 mt-[-20px] h-4 w-4 text-muted-foreground sm:mx-2" />
                 )}
               </div>
             ))}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Main Content */}
       <Card>
-        <CardContent className="p-8">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-2">
+        <CardContent className="p-4 sm:p-6 lg:p-8">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="mb-2 text-xl font-bold sm:text-2xl">
               {steps[currentStep - 1].name}
             </h2>
             <p className="text-muted-foreground">
@@ -268,15 +306,16 @@ const BookingFlow = () => {
 
           {/* Navigation */}
           {currentStep < steps.length && (
-            <div className="flex justify-between mt-8 pt-6 border-t">
+            <div className="mt-8 flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-between">
               <Button
                 variant="outline"
                 onClick={prevStep}
                 disabled={currentStep === 1}
+                className="w-full sm:w-auto"
               >
                 Previous
               </Button>
-              <Button onClick={nextStep} disabled={!canProceed}>
+              <Button onClick={nextStep} disabled={!canProceed} className="w-full sm:w-auto">
                 {currentStep === steps.length - 1 ? "Complete Booking" : "Next"}
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>

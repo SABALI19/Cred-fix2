@@ -15,7 +15,7 @@ export const optionalAuth = async (req, _res, next) => {
 
     const payload = verifyAuthToken(token);
     const user = await User.findById(payload.sub);
-    if (!user) {
+    if (!user || user.status === "suspended") {
       return next();
     }
 
