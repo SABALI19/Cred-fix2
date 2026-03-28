@@ -19,6 +19,20 @@ router.get("/", requireAuth, requireAdmin, async (_req, res, next) => {
   }
 });
 
+router.get("/me", requireAuth, async (req, res, next) => {
+  try {
+    const consultations = await ConsultationRequest.find({
+      email: String(req.user.email || "").toLowerCase().trim(),
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.json({ consultations });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.post("/", async (req, res, next) => {
   try {
     const { name, email, phone, message, serviceType, plan, agent, schedule } = req.body || {};

@@ -179,9 +179,13 @@ router.get("/agent/conversations", async (req, res, next) => {
 
     return res.json({
       conversations: Array.from(conversationMap.values()).sort((a, b) => {
-        const aTime = a.lastMessage?.createdAt || "";
-        const bTime = b.lastMessage?.createdAt || "";
-        return bTime.localeCompare(aTime);
+        const aTime = a.lastMessage?.createdAt
+          ? new Date(a.lastMessage.createdAt).getTime()
+          : 0;
+        const bTime = b.lastMessage?.createdAt
+          ? new Date(b.lastMessage.createdAt).getTime()
+          : 0;
+        return bTime - aTime;
       }),
     });
   } catch (error) {

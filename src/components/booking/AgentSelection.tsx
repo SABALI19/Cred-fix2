@@ -1,7 +1,16 @@
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Check, Clock, Users } from "lucide-react";
+import { Star, Check, Clock, Users, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { authService, type AgentOption } from "@/services/authService";
+import {
+  buildMergedAgentProfiles,
+  filterAgentProfilesByService,
+  type AgentProfile,
+} from "@/lib/agentProfiles";
+import { toast } from "@/hooks/use-toast";
 
 interface Agent {
   id: string;
@@ -16,107 +25,67 @@ interface Agent {
   nextAvailable: string;
   recommended?: boolean;
 }
-
 interface AgentSelectionProps {
   selectedService: string;
   selectedAgent: Agent | null;
   onAgentSelect: (agent: Agent) => void;
 }
 
-const getAgentsForService = (service: string): Agent[] => {
-  const creditAgents = [
-    {
-      id: "sarah-mitchell",
-      name: "Sarah Mitchell",
-      title: "Senior Credit Repair Specialist",
-      avatar: "/api/placeholder/100/100",
-      rating: 4.9,
-      specialties: ["Credit Disputes", "Score Optimization", "Debt Management"],
-      experience: "8+ years",
-      clientsServed: 1250,
-      successRate: 96,
-      nextAvailable: "Today 2:00 PM",
-      recommended: true,
-    },
-    {
-      id: "amanda-williams",
-      name: "Amanda Williams",
-      title: "Credit Dispute Resolution Expert",
-      avatar: "/api/placeholder/100/100",
-      rating: 4.8,
-      specialties: [
-        "Dispute Resolution",
-        "Credit Education",
-        "Financial Planning",
-      ],
-      experience: "6+ years",
-      clientsServed: 890,
-      successRate: 97,
-      nextAvailable: "Tomorrow 10:00 AM",
-    },
-    {
-      id: "robert-kim",
-      name: "Robert Kim",
-      title: "Identity Theft Recovery Specialist",
-      avatar: "/api/placeholder/100/100",
-      rating: 4.9,
-      specialties: ["Identity Theft", "Fraud Recovery", "Credit Monitoring"],
-      experience: "11+ years",
-      clientsServed: 2100,
-      successRate: 94,
-      nextAvailable: "Today 4:30 PM",
-    },
-  ];
-
-  const taxAgents = [
-    {
-      id: "michael-rodriguez",
-      name: "Michael Rodriguez",
-      title: "Senior Tax Strategist",
-      avatar: "/api/placeholder/100/100",
-      rating: 4.9,
-      specialties: ["Tax Planning", "Business Taxes", "IRS Representation"],
-      experience: "12+ years",
-      clientsServed: 1800,
-      successRate: 98,
-      nextAvailable: "Today 3:00 PM",
-      recommended: true,
-    },
-    {
-      id: "jennifer-chen",
-      name: "Jennifer Chen",
-      title: "Tax Preparation Expert",
-      avatar: "/api/placeholder/100/100",
-      rating: 4.8,
-      specialties: [
-        "Personal Taxes",
-        "Deduction Optimization",
-        "Refund Maximization",
-      ],
-      experience: "10+ years",
-      clientsServed: 1450,
-      successRate: 96,
-      nextAvailable: "Tomorrow 11:00 AM",
-    },
-  ];
-
-  if (service === "tax_services") {
-    return taxAgents;
-  }
-
-  if (service === "comprehensive") {
-    return [...creditAgents, ...taxAgents];
-  }
-
-  return creditAgents;
-};
+const toBookingAgent = (profile: AgentProfile, index: number): Agent => ({
+  id: profile.id,
+  name: profile.name,
+  title: profile.title,
+  avatar: profile.avatar,
+  rating: profile.rating,
+  specialties: [profile.specialization, ...profile.credentials.slice(0, 2)],
+  experience: profile.experience,
+  clientsServed: profile.clientsHelped,
+  successRate: profile.successRate,
+  nextAvailable: profile.availability,
+  recommended: index === 0,
+});
 
 const AgentSelection = ({
   selectedService,
   selectedAgent,
   onAgentSelect,
 }: AgentSelectionProps) => {
-  const agents = getAgentsForService(selectedService);
+  const { user } = useAuth();
+  const [availableAgents, setAvailableAgents] = useState<AgentOption[]>([]);
+  const [isLoadingAgents, setIsLoadingAgents] = useState(true);
+
+  useEffect(() => {
+    const loadAgents = async () => {
+      setIsLoadingAgents(true);
+      try {
+        const rows =
+          user?.role === "user"
+            ? await authService.getAvailableAgents()
+            : await authService.getPublicAgents();
+        setAvailableAgents(rows);
+      } catch (_error) {
+        toast({
+          title: "Could not load agents",
+          description: "Showing the standard specialist lineup for now.",
+          variant: "destructive",
+        });
+        setAvailableAgents([]);
+      } finally {
+        setIsLoadingAgents(false);
+      }
+    };
+
+    loadAgents();
+  }, [user?.role]);
+
+  const agents = useMemo(
+    () =>
+      filterAgentProfilesByService(
+        buildMergedAgentProfiles(availableAgents),
+        selectedService,
+      ).map(toBookingAgent),
+    [availableAgents, selectedService],
+  );
 
   const getServiceTitle = () => {
     switch (selectedService) {
@@ -139,6 +108,23 @@ const AgentSelection = ({
           Choose the specialist who will guide your financial journey
         </p>
       </div>
+
+      {isLoadingAgents ? (
+        <Card>
+          <CardContent className="flex items-center justify-center p-6 text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Loading specialists...
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {!isLoadingAgents && agents.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-center text-muted-foreground">
+            No specialists are available right now.
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-6 md:grid-cols-2">
         {agents.map((agent) => {

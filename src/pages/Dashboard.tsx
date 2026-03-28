@@ -20,6 +20,9 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import TaxFilingRequirements from "@/components/tax/TaxFilingRequirements";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
+import { creditService } from "@/services/creditService";
+import { disputeService } from "@/services/disputeService";
+import { consultationService } from "@/services/consultationService";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
@@ -91,12 +94,19 @@ const Dashboard = () => {
   const hasMonthlyTrend = monthlyProgress.length > 0;
   const hasRecentActivity = recentActivity.length > 0;
 
-  const handleExportProfile = () => {
+  const handleExportProfile = async () => {
     if (!user) {
       return;
     }
 
     try {
+      const [accounts, scores, disputes, consultationResponse] = await Promise.all([
+        creditService.getCreditAccounts(),
+        creditService.getCreditScoreHistory(),
+        disputeService.getDisputes(),
+        consultationService.getMyConsultations(),
+      ]);
+
       const exportPayload = {
         exportedAt: new Date().toISOString(),
         profile: {
@@ -110,6 +120,10 @@ const Dashboard = () => {
           activePlan: user.activePlan ?? null,
           assignedAgent: user.assignedAgent ?? null,
         },
+        creditAccounts: accounts,
+        creditScores: scores,
+        disputes,
+        appointments: consultationResponse.consultations,
       };
 
       const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
@@ -125,8 +139,9 @@ const Dashboard = () => {
       window.URL.revokeObjectURL(downloadUrl);
 
       toast({
-        title: "Profile exported",
-        description: "Your profile snapshot was downloaded successfully.",
+        title: "Export ready",
+        description:
+          "Your profile, credit data, disputes, and appointment history were downloaded successfully.",
       });
     } catch (_error) {
       toast({

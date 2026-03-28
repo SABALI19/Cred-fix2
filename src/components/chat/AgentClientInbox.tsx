@@ -23,6 +23,13 @@ interface AgentClientInboxProps {
   className?: string;
 }
 
+const FRIENDLY_INBOX_ERRORS = {
+  loadInbox: "Could not load the inbox right now. Please refresh or try again shortly.",
+  loadConversation:
+    "Could not load this conversation right now. Please try again shortly.",
+  send: "Could not send your message right now. Please try again.",
+};
+
 const formatTimestamp = (value: string) =>
   new Date(value).toLocaleString("en-US", {
     month: "short",
@@ -71,8 +78,8 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
       if (!selectedUserId && data.conversations.length > 0) {
         setSelectedUserId(data.conversations[0].user._id);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load inbox");
+    } catch (_error) {
+      setError(FRIENDLY_INBOX_ERRORS.loadInbox);
     } finally {
       setIsLoading(false);
     }
@@ -91,8 +98,8 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
             : item,
         ),
       );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load conversation");
+    } catch (_error) {
+      setError(FRIENDLY_INBOX_ERRORS.loadConversation);
     } finally {
       setIsLoadingMessages(false);
     }
@@ -260,8 +267,8 @@ const AgentClientInbox = ({ className }: AgentClientInboxProps) => {
             : item,
         ),
       );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send message");
+    } catch (_error) {
+      setError(FRIENDLY_INBOX_ERRORS.send);
     } finally {
       setIsSending(false);
     }

@@ -20,6 +20,11 @@ interface UserAgentChatProps {
   className?: string;
 }
 
+const FRIENDLY_CHAT_ERRORS = {
+  load: "Could not load your chat right now. Please refresh or try again shortly.",
+  send: "Could not send your message right now. Please try again.",
+};
+
 const formatTimestamp = (value: string) =>
   new Date(value).toLocaleString("en-US", {
     month: "short",
@@ -58,8 +63,8 @@ const UserAgentChat = ({ className }: UserAgentChatProps) => {
       const data = await messageService.getUserAssignedAgentConversation();
       setAgent(data.agent);
       setMessages(data.messages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load messages");
+    } catch (_error) {
+      setError(FRIENDLY_CHAT_ERRORS.load);
     } finally {
       setIsLoading(false);
     }
@@ -197,8 +202,8 @@ const UserAgentChat = ({ className }: UserAgentChatProps) => {
       const sent = await messageService.sendMessage(agent._id, draft.trim());
       setMessages((prev) => [...prev, sent.message]);
       setDraft("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send message");
+    } catch (_error) {
+      setError(FRIENDLY_CHAT_ERRORS.send);
     } finally {
       setIsSending(false);
     }
