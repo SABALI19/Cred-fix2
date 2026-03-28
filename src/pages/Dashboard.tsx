@@ -20,6 +20,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import TaxFilingRequirements from "@/components/tax/TaxFilingRequirements";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
   TrendingUp,
@@ -39,7 +40,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ResponsiveContainer,
   BarChart,
@@ -58,6 +59,7 @@ import UserAgentChat from "@/components/chat/UserAgentChat";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isTaxFilingOpen, setIsTaxFilingOpen] = useState(false);
   const [isRefundOptimizationOpen, setIsRefundOptimizationOpen] =
     useState(false);
@@ -88,6 +90,56 @@ const Dashboard = () => {
   const goalProgress = currentScore > 0 ? Math.min(100, Math.round((currentScore / goalTarget) * 100)) : 0;
   const hasMonthlyTrend = monthlyProgress.length > 0;
   const hasRecentActivity = recentActivity.length > 0;
+
+  const handleExportProfile = () => {
+    if (!user) {
+      return;
+    }
+
+    try {
+      const exportPayload = {
+        exportedAt: new Date().toISOString(),
+        profile: {
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status ?? "active",
+          phone: user.phone || "",
+          bio: user.bio || "",
+          selectedService: user.selectedService ?? null,
+          activePlan: user.activePlan ?? null,
+          assignedAgent: user.assignedAgent ?? null,
+        },
+      };
+
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+        type: "application/json",
+      });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = downloadUrl;
+      downloadLink.download = `creditfix-profile-${user.name.toLowerCase().replace(/\s+/g, "-") || "user"}.json`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast({
+        title: "Profile exported",
+        description: "Your profile snapshot was downloaded successfully.",
+      });
+    } catch (_error) {
+      toast({
+        title: "Export failed",
+        description: "We could not generate your profile export right now.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleScheduleCall = () => {
+    navigate("/booking");
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -216,13 +268,19 @@ const Dashboard = () => {
                   <span className="sm:inline">Edit Profile</span>
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={handleExportProfile}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 <span className="sm:inline">Export</span>
               </Button>
               <Button
                 size="sm"
                 className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 w-full sm:w-auto"
+                onClick={handleScheduleCall}
               >
                 <Calendar className="w-4 h-4 mr-2" />
                 <span className="sm:inline">Schedule Call</span>

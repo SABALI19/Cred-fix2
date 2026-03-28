@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,19 +29,38 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { AnimatedContainer } from "@/components/animations/AnimatedComponents";
 
+const buildFormData = (
+  user: ReturnType<typeof useAuth>["user"],
+) => ({
+  name: user?.name || "",
+  email: user?.email || "",
+  phone: user?.phone || "",
+  bio: user?.bio || "",
+  profilePhoto: user?.profilePhoto || "",
+});
+
 const ProfileSettings = () => {
   const { user, updateProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [formData, setFormData] = useState(() => buildFormData(user));
 
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    bio: user?.bio || "",
-    profilePhoto: user?.profilePhoto || "",
-  });
+  const resetForm = () => {
+    setFormData(buildFormData(user));
+    setPreviewImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  useEffect(() => {
+    setFormData(buildFormData(user));
+    setPreviewImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, [user?.name, user?.email, user?.phone, user?.bio, user?.profilePhoto]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -302,16 +321,7 @@ const ProfileSettings = () => {
                 type="button"
                 variant="outline"
                 className="w-full sm:w-auto"
-                onClick={() => {
-                  setFormData({
-                    name: user?.name || "",
-                    email: user?.email || "",
-                    phone: user?.phone || "",
-                    bio: user?.bio || "",
-                    profilePhoto: user?.profilePhoto || "",
-                  });
-                  setPreviewImage(null);
-                }}
+                onClick={resetForm}
               >
                 Reset
               </Button>
