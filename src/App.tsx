@@ -45,7 +45,7 @@ import { creditFixMantineTheme } from "@/config/mantineTheme";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { isIRSVerificationOpen, closeIRSVerification } = useAuth();
+  const { user, isIRSVerificationOpen, closeIRSVerification } = useAuth();
 
   return (
     <>
@@ -55,7 +55,7 @@ const AppContent = () => {
         isOpen={isIRSVerificationOpen}
         onClose={closeIRSVerification}
       />
-      <WelcomeSignupModal />
+      {!user && <WelcomeSignupModal />}
       <Chatbot />
       <Routes>
         <Route path="/" element={<Index />} />
